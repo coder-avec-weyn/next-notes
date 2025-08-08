@@ -330,6 +330,7 @@ export type Database = {
           two_factor_enabled: boolean | null
           updated_at: string | null
           user_id: string | null
+          username: string | null
           website: string | null
         }
         Insert: {
@@ -360,6 +361,7 @@ export type Database = {
           two_factor_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string | null
+          username?: string | null
           website?: string | null
         }
         Update: {
@@ -390,6 +392,7 @@ export type Database = {
           two_factor_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string | null
+          username?: string | null
           website?: string | null
         }
         Relationships: []

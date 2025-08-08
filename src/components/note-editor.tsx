@@ -66,7 +66,8 @@ interface NoteEditorProps {
 }
 
 export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
-  const { notes, createNote, updateNote, getTemplates } = useNotes();
+  const { notes, createNote, updateNote, getTemplates, templatesLoading } =
+    useNotes();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("general");
@@ -378,31 +379,41 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
               </div>
 
               {/* Templates */}
-              {!isEditing && templates.length > 0 && (
+              {!isEditing && (
                 <div>
                   <Label className="text-sm font-medium mb-2 block">
                     Templates
                   </Label>
-                  <Select
-                    onValueChange={(value) => {
-                      const template = templates.find((t) => t.id === value);
-                      if (template) handleTemplateSelect(template);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose a template" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {templates.map((template) => (
-                        <SelectItem key={template.id} value={template.id}>
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4" />
-                            {template.title}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {templatesLoading ? (
+                    <div className="animate-pulse">
+                      <div className="h-10 bg-muted rounded"></div>
+                    </div>
+                  ) : templates.length > 0 ? (
+                    <Select
+                      onValueChange={(value) => {
+                        const template = templates.find((t) => t.id === value);
+                        if (template) handleTemplateSelect(template);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a template" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {templates.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            <div className="flex items-center gap-2">
+                              <FileText className="w-4 h-4" />
+                              {template.title}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-sm text-muted-foreground p-2 border rounded">
+                      No templates available
+                    </p>
+                  )}
                 </div>
               )}
 

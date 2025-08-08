@@ -7,6 +7,9 @@ import { useEffect } from "react";
 
 export function useNotes() {
   const [isLoading, setIsLoading] = useState(false);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const { toast } = useToast();
@@ -26,6 +29,7 @@ export function useNotes() {
   // Fetch all notes
   const getNotes = async (filter?: string): Promise<Note[] | null> => {
     setIsLoading(true);
+    setNotesLoading(true);
     setError(null);
 
     try {
@@ -48,6 +52,7 @@ export function useNotes() {
       return null;
     } finally {
       setIsLoading(false);
+      setNotesLoading(false);
     }
   };
 
@@ -69,6 +74,7 @@ export function useNotes() {
       return null;
     } finally {
       setIsLoading(false);
+      setAnalyticsLoading(false);
     }
   };
 
@@ -108,6 +114,7 @@ export function useNotes() {
       return null;
     } finally {
       setIsLoading(false);
+      setTemplatesLoading(false);
     }
   };
 
@@ -365,6 +372,7 @@ export function useNotes() {
   // Get note templates
   const getTemplates = async () => {
     setIsLoading(true);
+    setTemplatesLoading(true);
     setError(null);
 
     try {
@@ -386,6 +394,7 @@ export function useNotes() {
   // Get analytics
   const getAnalytics = async () => {
     setIsLoading(true);
+    setAnalyticsLoading(true);
     setError(null);
 
     try {
@@ -406,6 +415,9 @@ export function useNotes() {
 
   return {
     isLoading,
+    notesLoading,
+    analyticsLoading,
+    templatesLoading,
     error,
     notes,
     loading: isLoading,

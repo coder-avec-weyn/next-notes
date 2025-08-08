@@ -74,6 +74,7 @@ export default function ProfilePage() {
   const [loadingActivity, setLoadingActivity] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [formData, setFormData] = useState({
+    username: "",
     name: "",
     full_name: "",
     bio: "",
@@ -123,6 +124,7 @@ export default function ProfilePage() {
       const userProfile = result.data;
       setProfile(userProfile);
       setFormData({
+        username: userProfile.username || "",
         name: userProfile.name || "",
         full_name: userProfile.full_name || "",
         bio: userProfile.bio || "",
@@ -169,6 +171,7 @@ export default function ProfilePage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          username: formData.username,
           name: formData.name,
           full_name: formData.full_name,
           bio: formData.bio,
@@ -217,6 +220,7 @@ export default function ProfilePage() {
   const handleCancel = () => {
     if (profile) {
       setFormData({
+        username: profile.username || "",
         name: profile.name || "",
         full_name: profile.full_name || "",
         bio: profile.bio || "",
@@ -575,6 +579,21 @@ export default function ProfilePage() {
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
+                          <Label htmlFor="username">Username</Label>
+                          <Input
+                            id="username"
+                            value={formData.username}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                username: e.target.value,
+                              }))
+                            }
+                            disabled={!isEditing}
+                            className={cn(!isEditing && "bg-muted")}
+                          />
+                        </div>
+                        <div>
                           <Label htmlFor="name">Display Name</Label>
                           <Input
                             id="name"
@@ -589,6 +608,9 @@ export default function ProfilePage() {
                             className={cn(!isEditing && "bg-muted")}
                           />
                         </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="full_name">Full Name</Label>
                           <Input
@@ -604,6 +626,7 @@ export default function ProfilePage() {
                             className={cn(!isEditing && "bg-muted")}
                           />
                         </div>
+                        <div></div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

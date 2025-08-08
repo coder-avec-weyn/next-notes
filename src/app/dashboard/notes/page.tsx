@@ -56,7 +56,7 @@ import { fadeInUp, staggerContainer, staggerItem } from "@/utils/animations";
 import { cn } from "@/lib/utils";
 
 export default function NotesPage() {
-  const { notes, loading, fetchNotes, exportNotes } = useNotes();
+  const { notes, loading, notesLoading, fetchNotes, exportNotes } = useNotes();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -223,7 +223,8 @@ export default function NotesPage() {
     setSelectedNotes([]);
   };
 
-  if (loading) {
+  // Show initial loading state only on first load
+  if (loading && notes.length === 0) {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
@@ -568,11 +569,24 @@ export default function NotesPage() {
       {/* Content */}
       <div className="container mx-auto px-4 py-8">
         {activeTab === "notes" ? (
-          <NotesList
-            notes={filteredNotes}
-            viewMode={viewMode}
-            onEditNote={handleEditNote}
-          />
+          <div className="relative">
+            {notesLoading && notes.length > 0 && (
+              <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                <div className="bg-card p-4 rounded-lg shadow-lg border">
+                  <LoadingSpinner size="md" />
+                  <p className="mt-2 text-sm text-muted-foreground text-center">
+                    Updating notes...
+                  </p>
+                </div>
+              </div>
+            )}
+            <NotesList
+              notes={filteredNotes}
+              viewMode={viewMode}
+              onEditNote={handleEditNote}
+              isLoading={notesLoading && notes.length === 0}
+            />
+          </div>
         ) : (
           <NotesAnalytics />
         )}
