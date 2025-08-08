@@ -28,7 +28,8 @@ import { fadeInUp, staggerContainer, staggerItem } from "@/utils/animations";
 import { NOTE_CATEGORIES } from "@/types/note";
 
 export default function Dashboard() {
-  const { notes, loading } = useNotes();
+  const { notes = [], loading } = useNotes();
+  const notesList = notes || [];
   const [user, setUser] = useState<any>(null);
   const [userLoading, setUserLoading] = useState(true);
   const supabase = createClient();
@@ -46,12 +47,12 @@ export default function Dashboard() {
 
   // Calculate statistics
   const stats = {
-    total: notes.length,
-    favorites: notes.filter((n) => n.is_favorite).length,
-    pinned: notes.filter((n) => n.is_pinned).length,
-    archived: notes.filter((n) => n.is_archived).length,
-    withReminders: notes.filter((n) => n.reminder_date).length,
-    recentlyUpdated: notes.filter((n) => {
+    total: notesList.length,
+    favorites: notesList.filter((n) => n.is_favorite).length,
+    pinned: notesList.filter((n) => n.is_pinned).length,
+    archived: notesList.filter((n) => n.is_archived).length,
+    withReminders: notesList.filter((n) => n.reminder_date).length,
+    recentlyUpdated: notesList.filter((n) => {
       const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       return new Date(n.updated_at) > dayAgo;
     }).length,
@@ -60,11 +61,11 @@ export default function Dashboard() {
   // Category distribution
   const categoryStats = NOTE_CATEGORIES.map((category) => ({
     category,
-    count: notes.filter((n) => n.category === category).length,
+    count: notesList.filter((n) => n.category === category).length,
   })).filter((stat) => stat.count > 0);
 
   // Recent notes
-  const recentNotes = notes
+  const recentNotes = notesList
     .sort(
       (a, b) =>
         new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),

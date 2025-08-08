@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
+
+const motion = dynamic(
+  () => import("framer-motion").then((mod) => mod.motion),
+  { ssr: false },
+);
+const AnimatePresence = dynamic(
+  () => import("framer-motion").then((mod) => mod.AnimatePresence),
+  { ssr: false },
+);
 import {
   Plus,
   Search,
@@ -36,7 +45,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useNotes } from "@/hooks/use-notes";
-import { NOTE_CATEGORIES, NOTE_COLORS, NoteFilters, NOTE_PRIORITIES, NOTE_STATUSES } from "@/types/note";
+import { NOTE_COLORS } from "@/types/note";
+
+import { NOTE_CATEGORIES, NOTE_PRIORITIES, NOTE_STATUSES } from "@/types/note";
 import { LoadingSpinner, LoadingCard } from "@/components/ui/loading-spinner";
 import { NotesList } from "@/components/notes-list";
 import { NoteEditor } from "@/components/note-editor";
@@ -190,19 +201,22 @@ export default function NotesPage() {
   };
 
   const handleBulkExport = async (format: string) => {
-    await exportNotes(format, selectedNotes.length > 0 ? selectedNotes : undefined);
+    await exportNotes(
+      format,
+      selectedNotes.length > 0 ? selectedNotes : undefined,
+    );
   };
 
   const toggleNoteSelection = (noteId: string) => {
-    setSelectedNotes(prev => 
-      prev.includes(noteId) 
-        ? prev.filter(id => id !== noteId)
-        : [...prev, noteId]
+    setSelectedNotes((prev) =>
+      prev.includes(noteId)
+        ? prev.filter((id) => id !== noteId)
+        : [...prev, noteId],
     );
   };
 
   const selectAllNotes = () => {
-    setSelectedNotes(filteredNotes.map(note => note.id));
+    setSelectedNotes(filteredNotes.map((note) => note.id));
   };
 
   const clearSelection = () => {
@@ -224,21 +238,16 @@ export default function NotesPage() {
   }
 
   return (
-    <motion.div
-      className="min-h-screen bg-background"
-      initial="initial"
-      animate="animate"
-      variants={staggerContainer}
-    >
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <motion.div
-        className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40"
-        variants={fadeInUp}
-      >
+      <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
+              <Tabs
+                value={activeTab}
+                onValueChange={(value: any) => setActiveTab(value)}
+              >
                 <TabsList>
                   <TabsTrigger value="notes" className="gap-2">
                     <FileText className="w-4 h-4" />
@@ -309,14 +318,11 @@ export default function NotesPage() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Filters */}
       {activeTab === "notes" && (
-        <motion.div
-          className="border-b bg-card/30 backdrop-blur-sm"
-          variants={fadeInUp}
-        >
+        <div className="border-b bg-card/30 backdrop-blur-sm">
           <div className="container mx-auto px-4 py-4">
             <div className="flex flex-col lg:flex-row gap-4">
               {/* Search */}
@@ -367,10 +373,7 @@ export default function NotesPage() {
               </Select>
 
               {/* Status Filter */}
-              <Select
-                value={selectedStatus}
-                onValueChange={setSelectedStatus}
-              >
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -465,7 +468,9 @@ export default function NotesPage() {
                   {allTags.map((tag) => (
                     <Badge
                       key={tag}
-                      variant={selectedTags.includes(tag) ? "default" : "outline"}
+                      variant={
+                        selectedTags.includes(tag) ? "default" : "outline"
+                      }
                       className="cursor-pointer hover:bg-primary/10"
                       onClick={() => toggleTag(tag)}
                     >
@@ -477,34 +482,30 @@ export default function NotesPage() {
               </div>
             )}
           </div>
-        </motion.div>
 
-        {/* Bulk Selection */}
-        {filteredNotes.length > 0 && (
-          <div className="flex items-center gap-2 mt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={selectAllNotes}
-              disabled={selectedNotes.length === filteredNotes.length}
-            >
-              Select All
-            </Button>
-            {selectedNotes.length > 0 && (
+          {/* Bulk Selection */}
+          {filteredNotes.length > 0 && (
+            <div className="container mx-auto px-4 flex items-center gap-2 mt-4">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={clearSelection}
+                onClick={selectAllNotes}
+                disabled={selectedNotes.length === filteredNotes.length}
               >
-                Clear Selection
+                Select All
               </Button>
-            )}
-          </div>
-        )}
-      </motion.div>
+              {selectedNotes.length > 0 && (
+                <Button variant="outline" size="sm" onClick={clearSelection}>
+                  Clear Selection
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Content */}
-      <motion.div className="container mx-auto px-4 py-8" variants={fadeInUp}>
+      <div className="container mx-auto px-4 py-8">
         {activeTab === "notes" ? (
           <NotesList
             notes={filteredNotes}
@@ -514,7 +515,7 @@ export default function NotesPage() {
         ) : (
           <NotesAnalytics />
         )}
-      </motion.div>
+      </div>
 
       {/* Note Editor Modal */}
       <AnimatePresence>
@@ -522,6 +523,6 @@ export default function NotesPage() {
           <NoteEditor noteId={selectedNote} onClose={handleCloseEditor} />
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }

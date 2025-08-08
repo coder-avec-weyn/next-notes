@@ -14,17 +14,13 @@ export type Database = {
   }
   public: {
     Tables: {
-      notes: {
+      note_templates: {
         Row: {
           category: string | null
           color: string | null
           content: string | null
           created_at: string | null
           id: string
-          is_archived: boolean | null
-          is_favorite: boolean | null
-          is_pinned: boolean | null
-          reminder_date: string | null
           tags: string[] | null
           title: string
           updated_at: string | null
@@ -36,12 +32,8 @@ export type Database = {
           content?: string | null
           created_at?: string | null
           id?: string
-          is_archived?: boolean | null
-          is_favorite?: boolean | null
-          is_pinned?: boolean | null
-          reminder_date?: string | null
           tags?: string[] | null
-          title?: string
+          title: string
           updated_at?: string | null
           user_id: string
         }
@@ -51,13 +43,161 @@ export type Database = {
           content?: string | null
           created_at?: string | null
           id?: string
-          is_archived?: boolean | null
-          is_favorite?: boolean | null
-          is_pinned?: boolean | null
-          reminder_date?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      note_versions: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string
+          note_id: string
+          title: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          note_id: string
+          title: string
+          user_id: string
+          version: number
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          note_id?: string
+          title?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_versions_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          category: string | null
+          collaborators: string[] | null
+          color: string | null
+          content: string | null
+          created_at: string | null
+          id: string
+          is_archived: boolean | null
+          is_favorite: boolean | null
+          is_pinned: boolean | null
+          location: string | null
+          mood: string | null
+          priority: string | null
+          reading_time: number | null
+          reminder_date: string | null
+          status: string | null
+          tags: string[] | null
+          template_id: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+          version: number | null
+          weather: string | null
+          word_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          collaborators?: string[] | null
+          color?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          is_archived?: boolean | null
+          is_favorite?: boolean | null
+          is_pinned?: boolean | null
+          location?: string | null
+          mood?: string | null
+          priority?: string | null
+          reading_time?: number | null
+          reminder_date?: string | null
+          status?: string | null
+          tags?: string[] | null
+          template_id?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id: string
+          version?: number | null
+          weather?: string | null
+          word_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          collaborators?: string[] | null
+          color?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          is_archived?: boolean | null
+          is_favorite?: boolean | null
+          is_pinned?: boolean | null
+          location?: string | null
+          mood?: string | null
+          priority?: string | null
+          reading_time?: number | null
+          reminder_date?: string | null
+          status?: string | null
+          tags?: string[] | null
+          template_id?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          version?: number | null
+          weather?: string | null
+          word_count?: number | null
+        }
+        Relationships: []
+      }
+      templates: {
+        Row: {
+          category: string | null
+          color: string | null
+          content: string | null
+          created_at: string
+          id: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          color?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          color?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

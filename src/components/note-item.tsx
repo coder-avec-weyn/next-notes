@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cardHover, buttonPress } from "@/utils/animations";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/toast-context";
 
 interface NoteItemProps {
   note: Note;
