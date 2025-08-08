@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../supabase/server";
-import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 // GET - Search for public users by username, name, full_name, or email
 export async function GET(request: NextRequest) {
@@ -28,20 +27,9 @@ export async function GET(request: NextRequest) {
     const searchQuery = query.trim();
     console.log("Searching for:", searchQuery);
 
-    // Create service role client to bypass RLS for public profile searches
-    const serviceSupabase = createServiceClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      },
-    );
-
-    // Search for users with public profiles
-    const { data, error } = await serviceSupabase
+    // Search for users with public profiles using the regular client
+    // The RLS policy "Users can view public profiles" allows this
+    const { data, error } = await supabase
       .from("users")
       .select(
         "id, username, name, full_name, email, bio, avatar_url, created_at, public_profile, location, website, company, job_title",
@@ -59,35 +47,16 @@ export async function GET(request: NextRequest) {
     }
 
     console.log(`Found ${data?.length || 0} users matching "${searchQuery}"`);
-
-    // If no results with the specific search, try a broader search
-    if (!data || data.length === 0) {
-      console.log("No results found, trying broader search...");
-
-      // Try searching with just the first few characters
-      const broadQuery = searchQuery.substring(
-        0,
-        Math.max(2, searchQuery.length - 1),
-      );
-
-      const { data: broadData, error: broadError } = await serviceSupabase
-        .from("users")
-        .select(
-          "id, username, name, full_name, email, bio, avatar_url, created_at, public_profile, location, website, company, job_title",
-        )
-        .eq("public_profile", true)
-        .or(
-          `username.ilike.%${broadQuery}%,name.ilike.%${broadQuery}%,full_name.ilike.%${broadQuery}%,email.ilike.%${broadQuery}%`,
-        )
-        .limit(limit)
-        .order("created_at", { ascending: false });
-
-      if (broadError) {
-        console.error("Error in broad search:", broadError);
-      } else {
-        console.log(`Broad search found ${broadData?.length || 0} users`);
-        return NextResponse.json({ data: broadData || [] });
-      }
+    
+    // Debug: Let's also check how many public users exist in total
+    const { data: allPublicUsers, error: countError } = await supabase
+      .from("users")
+      .select("id, username, name, full_name, public_profile")
+      .eq("public_profile", true)
+      .limit(5);
+      
+    if (!countError) {
+      console.log("Sample public users:", allPublicUsers);
     }
 
     return NextResponse.json({ data: data || [] });

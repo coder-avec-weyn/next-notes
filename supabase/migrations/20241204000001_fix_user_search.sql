@@ -37,6 +37,3 @@ CREATE POLICY "Users can update own data"
 CREATE POLICY "Users can insert own data"
   ON public.users FOR INSERT
   WITH CHECK (auth.uid() = id);
-
--- Enable realtime for users table
-alter publication supabase_realtime add table users;
