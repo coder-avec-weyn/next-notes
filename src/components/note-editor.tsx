@@ -81,8 +81,8 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
     "draft",
   );
   const [location, setLocation] = useState("");
-  const [mood, setMood] = useState("");
-  const [weather, setWeather] = useState("");
+  const [mood, setMood] = useState("none");
+  const [weather, setWeather] = useState("none");
   const [templates, setTemplates] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -106,8 +106,8 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
       setPriority(existingNote.priority || "medium");
       setStatus(existingNote.status || "draft");
       setLocation(existingNote.location || "");
-      setMood(existingNote.mood || "");
-      setWeather(existingNote.weather || "");
+      setMood(existingNote.mood || "none");
+      setWeather(existingNote.weather || "none");
     }
   }, [existingNote]);
 
@@ -142,8 +142,8 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
       priority,
       status,
       location: location.trim(),
-      mood,
-      weather,
+      mood: mood === "none" ? "" : mood,
+      weather: weather === "none" ? "" : weather,
       word_count: wordCount,
       reading_time: readingTime,
     };
@@ -218,7 +218,10 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                 variant={isFavorite ? "default" : "outline"}
                 size="sm"
                 onClick={() => setIsFavorite(!isFavorite)}
-                className="gap-2"
+                className={cn(
+                  "gap-2 transition-all duration-200",
+                  isFavorite && "bg-yellow-500 hover:bg-yellow-600 text-white",
+                )}
               >
                 <Star className={cn("w-4 h-4", isFavorite && "fill-current")} />
                 Favorite
@@ -227,7 +230,10 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                 variant={isPinned ? "default" : "outline"}
                 size="sm"
                 onClick={() => setIsPinned(!isPinned)}
-                className="gap-2"
+                className={cn(
+                  "gap-2 transition-all duration-200",
+                  isPinned && "bg-blue-500 hover:bg-blue-600 text-white",
+                )}
               >
                 <Pin className={cn("w-4 h-4", isPinned && "fill-current")} />
                 Pin
@@ -236,11 +242,20 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="gap-2 bg-green-600 hover:bg-green-700 text-white transition-all duration-200"
+            >
               <Save className="w-4 h-4" />
               {isSaving ? "Saving..." : "Save"}
             </Button>
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="hover:bg-red-100 hover:text-red-600 transition-all duration-200"
+            >
               <X className="w-4 h-4" />
             </Button>
           </div>
@@ -278,7 +293,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
           </div>
 
           {/* Sidebar */}
-          <div className="w-80 border-l bg-background/30 backdrop-blur-sm p-6 overflow-y-auto">
+          <div className="w-80 border-l bg-gradient-to-b from-background/40 to-background/20 backdrop-blur-sm p-6 overflow-y-auto">
             <div className="space-y-6">
               {/* Category */}
               <div>
@@ -316,20 +331,24 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                       }}
                       className="flex-1"
                     />
-                    <Button size="sm" onClick={handleAddTag}>
+                    <Button
+                      size="sm"
+                      onClick={handleAddTag}
+                      className="bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200"
+                    >
                       <Tag className="w-4 h-4" />
                     </Button>
                   </div>
                   {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-2">
                       {tags.map((tag) => (
                         <Badge
                           key={tag}
                           variant="secondary"
-                          className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
+                          className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 px-3 py-1"
                           onClick={() => handleRemoveTag(tag)}
                         >
-                          {tag}
+                          #{tag}
                           <X className="w-3 h-3 ml-1" />
                         </Badge>
                       ))}
@@ -341,15 +360,15 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
               {/* Color */}
               <div>
                 <Label className="text-sm font-medium mb-2 block">Color</Label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-5 gap-3">
                   {NOTE_COLORS.map((noteColor) => (
                     <button
                       key={noteColor}
                       className={cn(
-                        "w-8 h-8 rounded-full border-2 transition-all",
+                        "w-10 h-10 rounded-full border-2 transition-all duration-200 shadow-sm hover:shadow-md",
                         color === noteColor
-                          ? "border-primary scale-110"
-                          : "border-border hover:scale-105",
+                          ? "border-primary scale-110 ring-2 ring-primary/30"
+                          : "border-border hover:scale-105 hover:border-primary/50",
                       )}
                       style={{ backgroundColor: noteColor }}
                       onClick={() => setColor(noteColor)}
@@ -464,7 +483,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                     <SelectValue placeholder="Select mood" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No mood</SelectItem>
+                    <SelectItem value="none">No mood</SelectItem>
                     {NOTE_MOODS.map((m) => (
                       <SelectItem key={m} value={m}>
                         <div className="flex items-center gap-2">
@@ -487,7 +506,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                     <SelectValue placeholder="Select weather" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No weather</SelectItem>
+                    <SelectItem value="none">No weather</SelectItem>
                     {NOTE_WEATHER.map((w) => (
                       <SelectItem key={w} value={w}>
                         <div className="flex items-center gap-2">
@@ -545,15 +564,27 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
               </div>
 
               {/* Quick Actions */}
-              <div className="pt-4 border-t">
-                <div className="text-xs text-muted-foreground mb-2">
+              <div className="pt-4 border-t border-border/50">
+                <div className="text-xs font-medium text-muted-foreground mb-3">
                   Quick Actions
                 </div>
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <div className="text-muted-foreground">
-                    ⌘ + Enter: Save note
+                <div className="text-xs text-muted-foreground space-y-2">
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-muted/30">
+                    <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">
+                      ⌘
+                    </kbd>
+                    <span>+</span>
+                    <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">
+                      Enter
+                    </kbd>
+                    <span className="ml-2">Save note</span>
                   </div>
-                  <div className="text-muted-foreground">Esc: Close editor</div>
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-muted/30">
+                    <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">
+                      Esc
+                    </kbd>
+                    <span className="ml-2">Close editor</span>
+                  </div>
                 </div>
               </div>
             </div>
