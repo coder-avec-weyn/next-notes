@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cardHover, buttonPress } from "@/utils/animations";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/components/ui/toast-context";
+import { useToast } from "@/components/ui/use-toast";
 
 interface NoteItemProps {
   note: Note;
@@ -168,7 +168,7 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
     <motion.div {...cardHover} whileTap={{ scale: 0.98 }}>
       <Card
         className={cn(
-          "cursor-pointer transition-all duration-200 hover:shadow-md relative overflow-hidden",
+          "cursor-pointer transition-all duration-200 hover:shadow-md dark:hover:shadow-lg relative overflow-hidden border border-border dark:border-border",
           viewMode === "list" && "flex-row",
           note.is_archived && "opacity-60",
           isDeleting && "opacity-50 pointer-events-none",
@@ -187,7 +187,7 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
           <div className="flex items-start justify-between gap-2">
             <h3
               className={cn(
-                "font-semibold line-clamp-2 text-foreground",
+                "font-semibold line-clamp-2 text-foreground dark:text-foreground",
                 viewMode === "list" ? "text-lg" : "text-base",
               )}
             >
@@ -201,7 +201,7 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-8 w-8 p-0 hover:bg-background/50",
+                    "h-8 w-8 p-0 hover:bg-background/50 dark:hover:bg-background/50 transition-colors duration-200",
                     note.is_favorite && "text-yellow-500",
                   )}
                   onClick={handleToggleFavorite}
@@ -221,42 +221,59 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 hover:bg-background/50"
+                    className="h-8 w-8 p-0 hover:bg-background/50 dark:hover:bg-background/50 transition-colors duration-200"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <MoreVertical className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 bg-background dark:bg-background border-border dark:border-border"
+                >
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.stopPropagation();
                       onEdit();
                     }}
+                    className="text-foreground dark:text-foreground hover:bg-muted dark:hover:bg-muted"
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleCopyContent}>
+                  <DropdownMenuItem
+                    onClick={handleCopyContent}
+                    className="text-foreground dark:text-foreground hover:bg-muted dark:hover:bg-muted"
+                  >
                     <Copy className="w-4 h-4 mr-2" />
                     Copy Content
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDuplicate}>
+                  <DropdownMenuItem
+                    onClick={handleDuplicate}
+                    className="text-foreground dark:text-foreground hover:bg-muted dark:hover:bg-muted"
+                  >
                     <FileText className="w-4 h-4 mr-2" />
                     Duplicate
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={(e) => handleExport(e, "markdown")}
+                    className="text-foreground dark:text-foreground hover:bg-muted dark:hover:bg-muted"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export as Markdown
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleTogglePin}>
+                  <DropdownMenuItem
+                    onClick={handleTogglePin}
+                    className="text-foreground dark:text-foreground hover:bg-muted dark:hover:bg-muted"
+                  >
                     <Pin className="w-4 h-4 mr-2" />
                     {note.is_pinned ? "Unpin" : "Pin"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleToggleArchive}>
+                  <DropdownMenuItem
+                    onClick={handleToggleArchive}
+                    className="text-foreground dark:text-foreground hover:bg-muted dark:hover:bg-muted"
+                  >
                     <Archive className="w-4 h-4 mr-2" />
                     {note.is_archived ? "Unarchive" : "Archive"}
                   </DropdownMenuItem>
@@ -264,7 +281,7 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
+                        className="text-destructive focus:text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/10"
                         onSelect={(e) => e.preventDefault()}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
@@ -302,7 +319,7 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
           {note.content && (
             <p
               className={cn(
-                "text-muted-foreground mb-3 whitespace-pre-wrap",
+                "text-muted-foreground dark:text-muted-foreground mb-3 whitespace-pre-wrap",
                 viewMode === "grid"
                   ? "text-sm line-clamp-3"
                   : "text-base line-clamp-2",
@@ -316,13 +333,20 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
           {note.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-3">
               {note.tags.slice(0, 3).map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="text-xs bg-secondary dark:bg-secondary text-secondary-foreground dark:text-secondary-foreground"
+                >
                   <Tag className="w-3 h-3 mr-1" />
                   {tag}
                 </Badge>
               ))}
               {note.tags.length > 3 && (
-                <Badge variant="outline" className="text-xs">
+                <Badge
+                  variant="outline"
+                  className="text-xs border-border dark:border-border text-foreground dark:text-foreground"
+                >
                   +{note.tags.length - 3}
                 </Badge>
               )}
@@ -331,11 +355,11 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
 
           {/* Footer */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center justify-between text-xs text-muted-foreground dark:text-muted-foreground">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge
                   variant="outline"
-                  className="text-xs capitalize text-foreground"
+                  className="text-xs capitalize text-foreground dark:text-foreground border-border dark:border-border"
                 >
                   {note.category}
                 </Badge>
@@ -361,13 +385,13 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
                   </Badge>
                 )}
                 {note.reminder_date && (
-                  <div className="flex items-center gap-1 text-muted-foreground">
+                  <div className="flex items-center gap-1 text-muted-foreground dark:text-muted-foreground">
                     <Calendar className="w-3 h-3" />
                     <span>{formatDate(note.reminder_date)}</span>
                   </div>
                 )}
               </div>
-              <span className="text-muted-foreground">
+              <span className="text-muted-foreground dark:text-muted-foreground">
                 {formatDate(note.updated_at)}
               </span>
             </div>
@@ -377,7 +401,7 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
               note.mood ||
               note.weather ||
               note.word_count) && (
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-3 text-xs text-muted-foreground dark:text-muted-foreground">
                 {note.location && (
                   <div className="flex items-center gap-1">
                     <MapPin className="w-3 h-3" />

@@ -54,6 +54,12 @@ export async function GET(request: NextRequest) {
           profile_completion_percentage: 0,
           account_status: "active",
           last_login_at: new Date().toISOString(),
+          phone: null,
+          location: null,
+          website: null,
+          company: null,
+          job_title: null,
+          date_of_birth: null,
         })
         .select()
         .single();
@@ -101,6 +107,12 @@ export async function GET(request: NextRequest) {
       login_count: data.login_count || 0,
       profile_completion_percentage: data.profile_completion_percentage || 0,
       account_status: data.account_status || "active",
+      phone: data.phone || null,
+      location: data.location || null,
+      website: data.website || null,
+      company: data.company || null,
+      job_title: data.job_title || null,
+      date_of_birth: data.date_of_birth || null,
     };
 
     return NextResponse.json({ data: userProfile });
@@ -129,10 +141,16 @@ export async function PUT(request: NextRequest) {
 
     const updates = await request.json();
 
+    // Handle empty date fields by converting them to null
+    const processedUpdates = { ...updates };
+    if (processedUpdates.date_of_birth === "") {
+      processedUpdates.date_of_birth = null;
+    }
+
     const { data, error } = await supabase
       .from("users")
       .update({
-        ...updates,
+        ...processedUpdates,
         updated_at: new Date().toISOString(),
       })
       .eq("id", user.id)

@@ -439,7 +439,6 @@ export default function ProfilePage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Profile Completion */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-medium">
@@ -451,7 +450,7 @@ export default function ProfilePage() {
                       </div>
                       <Progress
                         value={profile?.profile_completion_percentage || 0}
-                        className="h-2"
+                        className="h-2 bg-muted dark:bg-muted"
                       />
                     </div>
 
@@ -538,11 +537,11 @@ export default function ProfilePage() {
                         <div className="flex items-center gap-2 mt-1">
                           <Badge
                             variant={
-                              profile?.account_status === "active"
+                              (profile?.account_status || "active") === "active"
                                 ? "default"
                                 : "destructive"
                             }
-                            className="text-xs"
+                            className="text-xs capitalize"
                           >
                             {profile?.account_status || "active"}
                           </Badge>
@@ -1210,12 +1209,12 @@ export default function ProfilePage() {
                       activityLogs.map((log) => (
                         <div
                           key={log.id}
-                          className="flex items-start gap-3 p-3 border rounded-lg"
+                          className="flex items-start gap-3 p-3 border rounded-lg bg-card dark:bg-card"
                         >
                           <div className="w-2 h-2 bg-primary rounded-full mt-2" />
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
-                              <p className="font-medium">
+                              <p className="font-medium text-foreground">
                                 {log.activity_type
                                   .replace("_", " ")
                                   .toUpperCase()}
@@ -1268,18 +1267,18 @@ export default function ProfilePage() {
                       sessions.map((session) => (
                         <div
                           key={session.id}
-                          className="flex items-center justify-between p-4 border rounded-lg"
+                          className="flex items-center justify-between p-4 border rounded-lg bg-card dark:bg-card"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="p-2 bg-muted rounded-lg">
+                            <div className="p-2 bg-muted dark:bg-muted rounded-lg">
                               {session.device_info?.includes("Mobile") ? (
-                                <Smartphone className="w-4 h-4" />
+                                <Smartphone className="w-4 h-4 text-foreground" />
                               ) : (
-                                <Monitor className="w-4 h-4" />
+                                <Monitor className="w-4 h-4 text-foreground" />
                               )}
                             </div>
                             <div>
-                              <p className="font-medium">
+                              <p className="font-medium text-foreground">
                                 {session.device_info || "Unknown Device"}
                               </p>
                               <p className="text-sm text-muted-foreground">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useToast } from "@/components/ui/toast-context";
+import { useToast } from "@/components/ui/use-toast";
 import { Note, CreateNoteData, UpdateNoteData } from "@/types/note";
 import { useEffect } from "react";
 
@@ -9,7 +9,7 @@ export function useNotes() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
-  const { addToast } = useToast();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Fetch notes on component mount
@@ -36,9 +36,15 @@ export function useNotes() {
         throw new Error(errorData.error || "Failed to fetch notes");
       }
       const { data } = await response.json();
+      setNotes(data); // Update local state
       return data;
     } catch (err: any) {
       setError(err.message);
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
       return null;
     } finally {
       setIsLoading(false);
@@ -86,9 +92,19 @@ export function useNotes() {
       }
 
       const { data } = await response.json();
+      setNotes((prev) => [data, ...prev]); // Add to local state
+      toast({
+        title: "Success",
+        description: "Note created successfully",
+      });
       return data;
     } catch (err: any) {
       setError(err.message);
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
       return null;
     } finally {
       setIsLoading(false);
@@ -118,9 +134,19 @@ export function useNotes() {
       }
 
       const { data } = await response.json();
+      setNotes((prev) => prev.map((note) => (note.id === id ? data : note))); // Update local state
+      toast({
+        title: "Success",
+        description: "Note updated successfully",
+      });
       return data;
     } catch (err: any) {
       setError(err.message);
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
       return null;
     } finally {
       setIsLoading(false);
@@ -142,9 +168,19 @@ export function useNotes() {
         throw new Error(errorData.error || "Failed to delete note");
       }
 
+      setNotes((prev) => prev.filter((note) => note.id !== id)); // Remove from local state
+      toast({
+        title: "Success",
+        description: "Note deleted successfully",
+      });
       return true;
     } catch (err: any) {
       setError(err.message);
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
       return false;
     } finally {
       setIsLoading(false);
@@ -174,9 +210,15 @@ export function useNotes() {
       }
 
       const { data } = await response.json();
+      setNotes((prev) => prev.map((note) => (note.id === id ? data : note))); // Update local state
       return data;
     } catch (err: any) {
       setError(err.message);
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
       return null;
     } finally {
       setIsLoading(false);
@@ -206,9 +248,15 @@ export function useNotes() {
       }
 
       const { data } = await response.json();
+      setNotes((prev) => prev.map((note) => (note.id === id ? data : note))); // Update local state
       return data;
     } catch (err: any) {
       setError(err.message);
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
       return null;
     } finally {
       setIsLoading(false);
@@ -238,9 +286,15 @@ export function useNotes() {
       }
 
       const { data } = await response.json();
+      setNotes((prev) => prev.map((note) => (note.id === id ? data : note))); // Update local state
       return data;
     } catch (err: any) {
       setError(err.message);
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
       return null;
     } finally {
       setIsLoading(false);
@@ -267,9 +321,19 @@ export function useNotes() {
       }
 
       const { data } = await response.json();
+      setNotes((prev) => [data, ...prev]); // Add to local state
+      toast({
+        title: "Success",
+        description: "Note duplicated successfully",
+      });
       return data;
     } catch (err: any) {
       setError(err.message);
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
       return null;
     } finally {
       setIsLoading(false);

@@ -14,6 +14,7 @@ ALTER TABLE public.users ADD COLUMN IF NOT EXISTS last_login_at timestamp with t
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS login_count integer DEFAULT 0;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_completion_percentage integer DEFAULT 0;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS account_status text DEFAULT 'active';
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS bio text;
 
 -- Create user_activity_logs table for activity tracking
 CREATE TABLE IF NOT EXISTS public.user_activity_logs (
@@ -59,11 +60,6 @@ CREATE INDEX IF NOT EXISTS user_sessions_user_id_idx ON public.user_sessions(use
 CREATE INDEX IF NOT EXISTS user_sessions_is_active_idx ON public.user_sessions(is_active);
 CREATE INDEX IF NOT EXISTS user_preferences_user_id_idx ON public.user_preferences(user_id);
 
--- Enable RLS on new tables
-ALTER TABLE public.user_activity_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_preferences ENABLE ROW LEVEL SECURITY;
-
 -- Create RLS policies for user_activity_logs
 DROP POLICY IF EXISTS "Users can view own activity logs" ON public.user_activity_logs;
 CREATE POLICY "Users can view own activity logs"
@@ -97,34 +93,6 @@ CREATE POLICY "Users can manage own preferences"
   ON public.user_preferences FOR ALL
   USING (auth.uid() = user_id);
 
--- Add tables to realtime publication
-DO $
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_publication_tables 
-        WHERE pubname = 'supabase_realtime' 
-        AND tablename = 'user_activity_logs'
-    ) THEN
-        ALTER PUBLICATION supabase_realtime ADD TABLE public.user_activity_logs;
-    END IF;
-    
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_publication_tables 
-        WHERE pubname = 'supabase_realtime' 
-        AND tablename = 'user_sessions'
-    ) THEN
-        ALTER PUBLICATION supabase_realtime ADD TABLE public.user_sessions;
-    END IF;
-    
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_publication_tables 
-        WHERE pubname = 'supabase_realtime' 
-        AND tablename = 'user_preferences'
-    ) THEN
-        ALTER PUBLICATION supabase_realtime ADD TABLE public.user_preferences;
-    END IF;
-END $;
-
 -- Create function to calculate profile completion percentage
 CREATE OR REPLACE FUNCTION calculate_profile_completion(user_row public.users)
 RETURNS integer AS $$
@@ -132,14 +100,12 @@ DECLARE
     completion_score integer := 0;
     total_fields integer := 15;
 BEGIN
-    -- Basic fields (5 points each)
+    -- Basic fields (1 point each)
     IF user_row.name IS NOT NULL AND user_row.name != '' THEN completion_score := completion_score + 1; END IF;
     IF user_row.full_name IS NOT NULL AND user_row.full_name != '' THEN completion_score := completion_score + 1; END IF;
     IF user_row.email IS NOT NULL AND user_row.email != '' THEN completion_score := completion_score + 1; END IF;
     IF user_row.bio IS NOT NULL AND user_row.bio != '' THEN completion_score := completion_score + 1; END IF;
     IF user_row.avatar_url IS NOT NULL AND user_row.avatar_url != '' THEN completion_score := completion_score + 1; END IF;
-    
-    -- Additional fields (1 point each)
     IF user_row.phone IS NOT NULL AND user_row.phone != '' THEN completion_score := completion_score + 1; END IF;
     IF user_row.location IS NOT NULL AND user_row.location != '' THEN completion_score := completion_score + 1; END IF;
     IF user_row.website IS NOT NULL AND user_row.website != '' THEN completion_score := completion_score + 1; END IF;
@@ -148,7 +114,7 @@ BEGIN
     IF user_row.timezone IS NOT NULL AND user_row.timezone != 'UTC' THEN completion_score := completion_score + 1; END IF;
     IF user_row.language IS NOT NULL AND user_row.language != 'en' THEN completion_score := completion_score + 1; END IF;
     IF user_row.date_of_birth IS NOT NULL THEN completion_score := completion_score + 1; END IF;
-    IF user_row.social_links IS NOT NULL AND jsonb_array_length(jsonb_object_keys(user_row.social_links)) > 0 THEN completion_score := completion_score + 1; END IF;
+    IF user_row.social_links IS NOT NULL AND jsonb_typeof(user_row.social_links) = 'object' AND user_row.social_links != '{}'::jsonb THEN completion_score := completion_score + 1; END IF;
     IF user_row.theme_preference IS NOT NULL AND user_row.theme_preference != 'system' THEN completion_score := completion_score + 1; END IF;
     
     RETURN (completion_score * 100 / total_fields);
@@ -164,6 +130,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_users_profile_completion ON public.users;
 CREATE TRIGGER update_users_profile_completion 
     BEFORE INSERT OR UPDATE ON public.users
     FOR EACH ROW EXECUTE FUNCTION update_profile_completion();
@@ -193,3 +160,31 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql;
+
+-- Add tables to realtime publication (only if not already added)
+DO $$
+BEGIN
+    -- Check and add user_activity_logs to realtime
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'user_activity_logs'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE user_activity_logs;
+    END IF;
+    
+    -- Check and add user_sessions to realtime
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'user_sessions'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE user_sessions;
+    END IF;
+    
+    -- Check and add user_preferences to realtime
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'user_preferences'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE user_preferences;
+    END IF;
+END $$;

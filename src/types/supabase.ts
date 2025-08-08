@@ -202,51 +202,195 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_logs: {
+        Row: {
+          activity_description: string | null
+          activity_type: string
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_description?: string | null
+          activity_type: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_description?: string | null
+          activity_type?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          preference_key: string
+          preference_value: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          preference_key: string
+          preference_value: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          preference_key?: string
+          preference_value?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          device_info: string | null
+          expires_at: string
+          id: string
+          ip_address: unknown | null
+          is_active: boolean | null
+          last_accessed_at: string | null
+          location: string | null
+          session_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_accessed_at?: string | null
+          location?: string | null
+          session_token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_accessed_at?: string | null
+          location?: string | null
+          session_token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
+          account_status: string | null
           avatar_url: string | null
           bio: string | null
+          company: string | null
           created_at: string
+          date_of_birth: string | null
           email: string | null
           full_name: string | null
           id: string
           image: string | null
+          job_title: string | null
+          language: string | null
+          last_login_at: string | null
+          location: string | null
+          login_count: number | null
           name: string | null
           notification_preferences: Json | null
+          phone: string | null
+          privacy_settings: Json | null
+          profile_completion_percentage: number | null
+          social_links: Json | null
           theme_preference: string | null
+          timezone: string | null
           token_identifier: string
+          two_factor_enabled: boolean | null
           updated_at: string | null
           user_id: string | null
+          website: string | null
         }
         Insert: {
+          account_status?: string | null
           avatar_url?: string | null
           bio?: string | null
+          company?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
           id: string
           image?: string | null
+          job_title?: string | null
+          language?: string | null
+          last_login_at?: string | null
+          location?: string | null
+          login_count?: number | null
           name?: string | null
           notification_preferences?: Json | null
+          phone?: string | null
+          privacy_settings?: Json | null
+          profile_completion_percentage?: number | null
+          social_links?: Json | null
           theme_preference?: string | null
+          timezone?: string | null
           token_identifier: string
+          two_factor_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string | null
+          website?: string | null
         }
         Update: {
+          account_status?: string | null
           avatar_url?: string | null
           bio?: string | null
+          company?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           image?: string | null
+          job_title?: string | null
+          language?: string | null
+          last_login_at?: string | null
+          location?: string | null
+          login_count?: number | null
           name?: string | null
           notification_preferences?: Json | null
+          phone?: string | null
+          privacy_settings?: Json | null
+          profile_completion_percentage?: number | null
+          social_links?: Json | null
           theme_preference?: string | null
+          timezone?: string | null
           token_identifier?: string
+          two_factor_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string | null
+          website?: string | null
         }
         Relationships: []
       }
@@ -255,7 +399,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_profile_completion: {
+        Args: { user_row: Database["public"]["Tables"]["users"]["Row"] }
+        Returns: number
+      }
+      log_user_activity: {
+        Args: {
+          p_user_id: string
+          p_activity_type: string
+          p_activity_description?: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

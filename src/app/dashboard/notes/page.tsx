@@ -248,18 +248,27 @@ export default function NotesPage() {
                 value={activeTab}
                 onValueChange={(value: any) => setActiveTab(value)}
               >
-                <TabsList>
-                  <TabsTrigger value="notes" className="gap-2">
+                <TabsList className="bg-muted dark:bg-muted">
+                  <TabsTrigger
+                    value="notes"
+                    className="gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground"
+                  >
                     <FileText className="w-4 h-4" />
                     Notes
                   </TabsTrigger>
-                  <TabsTrigger value="analytics" className="gap-2">
+                  <TabsTrigger
+                    value="analytics"
+                    className="gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground"
+                  >
                     <BarChart3 className="w-4 h-4" />
                     Analytics
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
-              <Badge variant="secondary" className="text-foreground">
+              <Badge
+                variant="secondary"
+                className="text-foreground bg-secondary dark:bg-secondary dark:text-secondary-foreground"
+              >
                 {filteredNotes.length} notes
               </Badge>
             </div>
@@ -332,7 +341,7 @@ export default function NotesPage() {
                   placeholder="Search notes..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-background dark:bg-background text-foreground dark:text-foreground border-border dark:border-border"
                 />
               </div>
 
@@ -341,13 +350,22 @@ export default function NotesPage() {
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
               >
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-40 bg-background dark:bg-background text-foreground dark:text-foreground border-border dark:border-border">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                <SelectContent className="bg-background dark:bg-background border-border dark:border-border">
+                  <SelectItem
+                    value="all"
+                    className="text-foreground dark:text-foreground"
+                  >
+                    All Categories
+                  </SelectItem>
                   {NOTE_CATEGORIES.map((category) => (
-                    <SelectItem key={category} value={category}>
+                    <SelectItem
+                      key={category}
+                      value={category}
+                      className="text-foreground dark:text-foreground"
+                    >
                       {category.charAt(0).toUpperCase() + category.slice(1)}
                     </SelectItem>
                   ))}
@@ -359,13 +377,22 @@ export default function NotesPage() {
                 value={selectedPriority}
                 onValueChange={setSelectedPriority}
               >
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-32 bg-background dark:bg-background text-foreground dark:text-foreground border-border dark:border-border">
                   <SelectValue placeholder="Priority" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Priorities</SelectItem>
+                <SelectContent className="bg-background dark:bg-background border-border dark:border-border">
+                  <SelectItem
+                    value="all"
+                    className="text-foreground dark:text-foreground"
+                  >
+                    All Priorities
+                  </SelectItem>
                   {NOTE_PRIORITIES.map((priority) => (
-                    <SelectItem key={priority} value={priority}>
+                    <SelectItem
+                      key={priority}
+                      value={priority}
+                      className="text-foreground dark:text-foreground"
+                    >
                       {priority.charAt(0).toUpperCase() + priority.slice(1)}
                     </SelectItem>
                   ))}
@@ -374,13 +401,22 @@ export default function NotesPage() {
 
               {/* Status Filter */}
               <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-32 bg-background dark:bg-background text-foreground dark:text-foreground border-border dark:border-border">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
+                <SelectContent className="bg-background dark:bg-background border-border dark:border-border">
+                  <SelectItem
+                    value="all"
+                    className="text-foreground dark:text-foreground"
+                  >
+                    All Statuses
+                  </SelectItem>
                   {NOTE_STATUSES.map((status) => (
-                    <SelectItem key={status} value={status}>
+                    <SelectItem
+                      key={status}
+                      value={status}
+                      className="text-foreground dark:text-foreground"
+                    >
                       {status.charAt(0).toUpperCase() + status.slice(1)}
                     </SelectItem>
                   ))}
@@ -393,13 +429,28 @@ export default function NotesPage() {
                   value={sortBy}
                   onValueChange={(value: any) => setSortBy(value)}
                 >
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32 bg-background dark:bg-background text-foreground dark:text-foreground border-border dark:border-border">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="updated">Updated</SelectItem>
-                    <SelectItem value="created">Created</SelectItem>
-                    <SelectItem value="title">Title</SelectItem>
+                  <SelectContent className="bg-background dark:bg-background border-border dark:border-border">
+                    <SelectItem
+                      value="updated"
+                      className="text-foreground dark:text-foreground"
+                    >
+                      Updated
+                    </SelectItem>
+                    <SelectItem
+                      value="created"
+                      className="text-foreground dark:text-foreground"
+                    >
+                      Created
+                    </SelectItem>
+                    <SelectItem
+                      value="title"
+                      className="text-foreground dark:text-foreground"
+                    >
+                      Title
+                    </SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -409,6 +460,7 @@ export default function NotesPage() {
                   onClick={() =>
                     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
                   }
+                  className="bg-background dark:bg-background text-foreground dark:text-foreground border-border dark:border-border hover:bg-muted dark:hover:bg-muted"
                 >
                   {sortOrder === "asc" ? (
                     <SortAsc className="w-4 h-4" />
@@ -427,7 +479,10 @@ export default function NotesPage() {
                   checked={showFavorites}
                   onCheckedChange={setShowFavorites}
                 />
-                <Label htmlFor="favorites" className="flex items-center gap-1">
+                <Label
+                  htmlFor="favorites"
+                  className="flex items-center gap-1 text-foreground dark:text-foreground"
+                >
                   <Star className="w-4 h-4" />
                   Favorites
                 </Label>
@@ -439,7 +494,10 @@ export default function NotesPage() {
                   checked={showPinned}
                   onCheckedChange={setShowPinned}
                 />
-                <Label htmlFor="pinned" className="flex items-center gap-1">
+                <Label
+                  htmlFor="pinned"
+                  className="flex items-center gap-1 text-foreground dark:text-foreground"
+                >
                   <Pin className="w-4 h-4" />
                   Pinned
                 </Label>
@@ -451,7 +509,10 @@ export default function NotesPage() {
                   checked={showArchived}
                   onCheckedChange={setShowArchived}
                 />
-                <Label htmlFor="archived" className="flex items-center gap-1">
+                <Label
+                  htmlFor="archived"
+                  className="flex items-center gap-1 text-foreground dark:text-foreground"
+                >
                   <Archive className="w-4 h-4" />
                   Archived
                 </Label>
@@ -461,7 +522,7 @@ export default function NotesPage() {
             {/* Tags Filter */}
             {allTags.length > 0 && (
               <div className="mt-4">
-                <Label className="text-sm font-medium mb-2 block">
+                <Label className="text-sm font-medium mb-2 block text-foreground dark:text-foreground">
                   Filter by tags:
                 </Label>
                 <div className="flex flex-wrap gap-2">
@@ -471,7 +532,7 @@ export default function NotesPage() {
                       variant={
                         selectedTags.includes(tag) ? "default" : "outline"
                       }
-                      className="cursor-pointer hover:bg-primary/10"
+                      className="cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/10 text-foreground dark:text-foreground transition-all duration-200"
                       onClick={() => toggleTag(tag)}
                     >
                       <Tag className="w-3 h-3 mr-1" />
