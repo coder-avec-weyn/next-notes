@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
       is_favorite: noteData.is_favorite || false,
       is_pinned: noteData.is_pinned || false,
       is_archived: false,
+      is_public: noteData.is_public || false,
     };
 
     const { data, error } = await supabase

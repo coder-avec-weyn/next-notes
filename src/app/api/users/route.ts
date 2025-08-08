@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
           timezone: "UTC",
           language: "en",
           two_factor_enabled: false,
+          public_profile: true,
           login_count: 1,
           profile_completion_percentage: 0,
           account_status: "active",
@@ -106,6 +107,8 @@ export async function GET(request: NextRequest) {
       timezone: data.timezone || "UTC",
       language: data.language || "en",
       two_factor_enabled: data.two_factor_enabled || false,
+      public_profile:
+        data.public_profile !== undefined ? data.public_profile : true,
       login_count: data.login_count || 0,
       profile_completion_percentage: data.profile_completion_percentage || 0,
       account_status: data.account_status || "active",

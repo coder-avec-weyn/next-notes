@@ -23,6 +23,7 @@ import {
   Smile,
   Cloud,
   FileText,
+  Globe,
 } from "lucide-react";
 import {
   Note,
@@ -76,6 +77,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
   const [color, setColor] = useState("#ffffff");
   const [isFavorite, setIsFavorite] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
   const [reminderDate, setReminderDate] = useState<Date | undefined>();
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
   const [status, setStatus] = useState<"draft" | "published" | "review">(
@@ -99,6 +101,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
       setColor(existingNote.color);
       setIsFavorite(existingNote.is_favorite);
       setIsPinned(existingNote.is_pinned);
+      setIsPublic(existingNote.is_public);
       setReminderDate(
         existingNote.reminder_date
           ? new Date(existingNote.reminder_date)
@@ -139,6 +142,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
       color,
       is_favorite: isFavorite,
       is_pinned: isPinned,
+      is_public: isPublic,
       reminder_date: reminderDate?.toISOString(),
       priority,
       status,
@@ -238,6 +242,18 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
               >
                 <Pin className={cn("w-4 h-4", isPinned && "fill-current")} />
                 Pin
+              </Button>
+              <Button
+                variant={isPublic ? "default" : "outline"}
+                size="sm"
+                onClick={() => setIsPublic(!isPublic)}
+                className={cn(
+                  "gap-2 transition-all duration-200",
+                  isPublic && "bg-green-500 hover:bg-green-600 text-white",
+                )}
+              >
+                <Globe className={cn("w-4 h-4", isPublic && "fill-current")} />
+                Public
               </Button>
             </div>
           </div>

@@ -27,6 +27,7 @@ export interface UserProfile {
     reminders: boolean;
   };
   two_factor_enabled: boolean;
+  public_profile: boolean;
   last_login_at?: string;
   login_count: number;
   profile_completion_percentage: number;
@@ -79,6 +80,7 @@ export interface Note {
   is_favorite: boolean;
   is_pinned: boolean;
   is_archived: boolean;
+  is_public: boolean;
   reminder_date?: string;
   priority?: "low" | "medium" | "high";
   status?: "draft" | "published" | "review";
@@ -99,6 +101,7 @@ export interface CreateNoteData {
   color: string;
   is_favorite: boolean;
   is_pinned: boolean;
+  is_public: boolean;
   reminder_date?: string;
   priority?: "low" | "medium" | "high";
   status?: "draft" | "published" | "review";

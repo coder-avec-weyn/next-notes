@@ -99,6 +99,7 @@ export type Database = {
           is_archived: boolean | null
           is_favorite: boolean | null
           is_pinned: boolean | null
+          is_public: boolean | null
           location: string | null
           mood: string | null
           priority: string | null
@@ -124,6 +125,7 @@ export type Database = {
           is_archived?: boolean | null
           is_favorite?: boolean | null
           is_pinned?: boolean | null
+          is_public?: boolean | null
           location?: string | null
           mood?: string | null
           priority?: string | null
@@ -149,6 +151,7 @@ export type Database = {
           is_archived?: boolean | null
           is_favorite?: boolean | null
           is_pinned?: boolean | null
+          is_public?: boolean | null
           location?: string | null
           mood?: string | null
           priority?: string | null
@@ -323,6 +326,7 @@ export type Database = {
           phone: string | null
           privacy_settings: Json | null
           profile_completion_percentage: number | null
+          public_profile: boolean | null
           social_links: Json | null
           theme_preference: string | null
           timezone: string | null
@@ -354,6 +358,7 @@ export type Database = {
           phone?: string | null
           privacy_settings?: Json | null
           profile_completion_percentage?: number | null
+          public_profile?: boolean | null
           social_links?: Json | null
           theme_preference?: string | null
           timezone?: string | null
@@ -385,6 +390,7 @@ export type Database = {
           phone?: string | null
           privacy_settings?: Json | null
           profile_completion_percentage?: number | null
+          public_profile?: boolean | null
           social_links?: Json | null
           theme_preference?: string | null
           timezone?: string | null

@@ -100,6 +100,7 @@ export default function ProfilePage() {
       reminders: true,
     },
     two_factor_enabled: false,
+    public_profile: false,
   });
 
   const { toast } = useToast();
@@ -146,6 +147,8 @@ export default function ProfilePage() {
         theme_preference: userProfile.theme_preference,
         notification_preferences: userProfile.notification_preferences,
         two_factor_enabled: userProfile.two_factor_enabled || false,
+        public_profile:
+          profile.public_profile !== undefined ? profile.public_profile : true,
       });
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -189,6 +192,7 @@ export default function ProfilePage() {
           theme_preference: formData.theme_preference,
           notification_preferences: formData.notification_preferences,
           two_factor_enabled: formData.two_factor_enabled,
+          public_profile: formData.public_profile,
         }),
       });
 
@@ -242,6 +246,8 @@ export default function ProfilePage() {
         theme_preference: profile.theme_preference,
         notification_preferences: profile.notification_preferences,
         two_factor_enabled: profile.two_factor_enabled || false,
+        public_profile:
+          profile.public_profile !== undefined ? profile.public_profile : true,
       });
     }
     setIsEditing(false);
@@ -1120,6 +1126,40 @@ export default function ProfilePage() {
                       }
                     >
                       {formData.two_factor_enabled ? "Enabled" : "Disabled"}
+                    </Badge>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-medium">Public Profile</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Allow others to find and view your public profile
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={formData.public_profile}
+                      onCheckedChange={(checked) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          public_profile: checked,
+                        }));
+                        logActivity(
+                          "privacy_change",
+                          `Public profile ${checked ? "enabled" : "disabled"}`,
+                        );
+                      }}
+                      disabled={!isEditing}
+                    />
+                    <Badge
+                      variant={
+                        formData.public_profile ? "default" : "secondary"
+                      }
+                    >
+                      {formData.public_profile ? "Public" : "Private"}
                     </Badge>
                   </div>
                 </div>

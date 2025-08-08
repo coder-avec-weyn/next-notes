@@ -20,6 +20,7 @@ import {
   Settings,
   LogOut,
   Bell,
+  Search,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ThemeSwitcher } from "./theme-switcher";
@@ -33,6 +34,7 @@ export default function DashboardNavbar() {
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: Home },
     { href: "/dashboard/notes", label: "Notes", icon: FileText },
+    { href: "/dashboard/search", label: "Search", icon: Search },
     { href: "/dashboard/profile", label: "Profile", icon: User },
   ];
 
