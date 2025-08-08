@@ -106,9 +106,15 @@ export default function ProfilePage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchProfile();
-    fetchActivityLogs();
-    fetchSessions();
+    const loadProfileData = async () => {
+      await fetchProfile();
+      // Only fetch additional data if profile loads successfully
+      if (profile) {
+        fetchActivityLogs();
+        fetchSessions();
+      }
+    };
+    loadProfileData();
   }, []);
 
   const fetchProfile = async () => {
@@ -148,7 +154,9 @@ export default function ProfilePage() {
         notification_preferences: userProfile.notification_preferences,
         two_factor_enabled: userProfile.two_factor_enabled || false,
         public_profile:
-          profile.public_profile !== undefined ? profile.public_profile : true,
+          userProfile.public_profile !== undefined
+            ? userProfile.public_profile
+            : true,
       });
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -247,7 +255,9 @@ export default function ProfilePage() {
         notification_preferences: profile.notification_preferences,
         two_factor_enabled: profile.two_factor_enabled || false,
         public_profile:
-          profile.public_profile !== undefined ? profile.public_profile : true,
+          userProfile.public_profile !== undefined
+            ? userProfile.public_profile
+            : true,
       });
     }
     setIsEditing(false);
@@ -261,9 +271,14 @@ export default function ProfilePage() {
 
       if (response.ok) {
         setActivityLogs(result.data || []);
+      } else {
+        // Silently handle activity logs error - not critical for profile page
+        console.warn("Activity logs not available:", result.error);
+        setActivityLogs([]);
       }
     } catch (error) {
-      console.error("Error fetching activity logs:", error);
+      console.warn("Error fetching activity logs:", error);
+      setActivityLogs([]);
     } finally {
       setLoadingActivity(false);
     }
@@ -277,9 +292,14 @@ export default function ProfilePage() {
 
       if (response.ok) {
         setSessions(result.data || []);
+      } else {
+        // Silently handle sessions error - not critical for profile page
+        console.warn("Sessions not available:", result.error);
+        setSessions([]);
       }
     } catch (error) {
-      console.error("Error fetching sessions:", error);
+      console.warn("Error fetching sessions:", error);
+      setSessions([]);
     } finally {
       setLoadingSessions(false);
     }

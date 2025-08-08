@@ -36,6 +36,7 @@ interface PublicUser {
   company?: string;
   job_title?: string;
   public_notes_count?: number;
+  public_profile?: boolean;
 }
 
 export default function SearchPage() {
@@ -46,7 +47,7 @@ export default function SearchPage() {
   const { toast } = useToast();
 
   const searchUsers = async (query: string) => {
-    if (query.trim().length < 2) {
+    if (query.trim().length < 1) {
       setSearchResults([]);
       setHasSearched(false);
       return;
@@ -54,10 +55,13 @@ export default function SearchPage() {
 
     setIsSearching(true);
     try {
+      console.log("Searching for:", query);
       const response = await fetch(
         `/api/search/users?q=${encodeURIComponent(query)}&limit=20`,
       );
       const result = await response.json();
+
+      console.log("Search response:", result);
 
       if (!response.ok) {
         throw new Error(result.error || "Failed to search users");
@@ -72,16 +76,18 @@ export default function SearchPage() {
         description: error.message,
         variant: "destructive",
       });
+      setSearchResults([]);
+      setHasSearched(true);
     } finally {
       setIsSearching(false);
     }
   };
 
-  // Debounced search
+  // Debounced search with shorter delay for smoother experience
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       searchUsers(searchQuery);
-    }, 300);
+    }, 150);
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
@@ -161,8 +167,7 @@ export default function SearchPage() {
               Start searching
             </h3>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Enter a username or display name to find users with public
-              profiles
+              Start typing to search for users by username, name, or full name
             </p>
           </motion.div>
         )}
