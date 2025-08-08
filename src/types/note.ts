@@ -1,3 +1,72 @@
+export interface UserProfile {
+  id: string;
+  email: string;
+  name?: string;
+  full_name?: string;
+  bio?: string;
+  avatar_url?: string;
+  phone?: string;
+  location?: string;
+  website?: string;
+  company?: string;
+  job_title?: string;
+  timezone: string;
+  language: string;
+  date_of_birth?: string;
+  social_links: Record<string, string>;
+  privacy_settings: {
+    profile_visibility: "public" | "private" | "friends";
+    email_visibility: "public" | "private" | "friends";
+    activity_visibility: "public" | "private" | "friends";
+  };
+  theme_preference: "light" | "dark" | "system";
+  notification_preferences: {
+    email: boolean;
+    push: boolean;
+    reminders: boolean;
+  };
+  two_factor_enabled: boolean;
+  last_login_at?: string;
+  login_count: number;
+  profile_completion_percentage: number;
+  account_status: "active" | "inactive" | "suspended";
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface UserActivityLog {
+  id: string;
+  user_id: string;
+  activity_type: string;
+  activity_description?: string;
+  ip_address?: string;
+  user_agent?: string;
+  created_at: string;
+}
+
+export interface UserSession {
+  id: string;
+  user_id: string;
+  session_token: string;
+  device_info?: string;
+  ip_address?: string;
+  location?: string;
+  is_active: boolean;
+  expires_at: string;
+  created_at: string;
+  last_accessed_at: string;
+}
+
+export interface UserPreference {
+  id: string;
+  user_id: string;
+  category: string;
+  preference_key: string;
+  preference_value: any;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Note {
   id: string;
   user_id: string;
@@ -7,80 +76,39 @@ export interface Note {
   tags: string[];
   color: string;
   is_favorite: boolean;
-  is_archived: boolean;
   is_pinned: boolean;
+  is_archived: boolean;
   reminder_date?: string;
-  created_at: string;
-  updated_at: string;
-  // New features
   priority?: "low" | "medium" | "high";
   status?: "draft" | "published" | "review";
-  word_count?: number;
-  reading_time?: number;
-  collaborators?: string[];
-  version?: number;
-  template_id?: string;
   location?: string;
   mood?: string;
   weather?: string;
+  word_count?: number;
+  reading_time?: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateNoteData {
-  title?: string;
-  content?: string;
-  category?: string;
-  tags?: string[];
-  color?: string;
-  is_favorite?: boolean;
-  is_pinned?: boolean;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  color: string;
+  is_favorite: boolean;
+  is_pinned: boolean;
   reminder_date?: string;
   priority?: "low" | "medium" | "high";
   status?: "draft" | "published" | "review";
-  collaborators?: string[];
-  template_id?: string;
   location?: string;
   mood?: string;
   weather?: string;
-}
-
-export interface UpdateNoteData extends Partial<CreateNoteData> {
-  is_archived?: boolean;
   word_count?: number;
   reading_time?: number;
-  version?: number;
 }
 
-export interface NoteFilters {
-  category?: string;
-  tags?: string[];
-  is_favorite?: boolean;
-  is_archived?: boolean;
-  is_pinned?: boolean;
-  search?: string;
-  priority?: "low" | "medium" | "high";
-  status?: "draft" | "published" | "review";
-  collaborators?: string[];
-  date_range?: { start: string; end: string };
-  word_count_range?: { min: number; max: number };
-  location?: string;
-  mood?: string;
-}
-
-export interface UserProfile {
-  id: string;
-  name: string;
-  full_name: string;
-  email: string;
-  avatar_url?: string;
-  bio?: string;
-  theme_preference: "light" | "dark" | "system";
-  notification_preferences: {
-    email: boolean;
-    push: boolean;
-    reminders: boolean;
-  };
-  created_at: string;
-}
+export interface UpdateNoteData extends Partial<CreateNoteData> {}
 
 export const NOTE_CATEGORIES = [
   "general",
@@ -88,50 +116,52 @@ export const NOTE_CATEGORIES = [
   "personal",
   "ideas",
   "todo",
-  "meeting",
-  "project",
-  "research",
   "journal",
-  "recipe",
+  "meeting",
+  "research",
+  "project",
   "travel",
-  "health",
-  "finance",
-  "education",
+] as const;
+
+export const NOTE_COLORS = [
+  "#ffffff",
+  "#fef3c7",
+  "#fde68a",
+  "#fed7aa",
+  "#fecaca",
+  "#f3e8ff",
+  "#e0e7ff",
+  "#bfdbfe",
+  "#a7f3d0",
+  "#d1fae5",
 ] as const;
 
 export const NOTE_PRIORITIES = ["low", "medium", "high"] as const;
+
 export const NOTE_STATUSES = ["draft", "published", "review"] as const;
+
 export const NOTE_MOODS = [
   "happy",
   "sad",
   "excited",
   "calm",
-  "stressed",
+  "anxious",
   "motivated",
-  "creative",
+  "tired",
   "focused",
+  "creative",
+  "grateful",
 ] as const;
+
 export const NOTE_WEATHER = [
   "sunny",
   "cloudy",
   "rainy",
   "snowy",
-  "stormy",
+  "windy",
   "foggy",
+  "stormy",
+  "clear",
+  "overcast",
+  "humid",
 ] as const;
-
-export const NOTE_COLORS = [
-  "#ffffff", // White
-  "#fef3c7", // Yellow
-  "#dbeafe", // Blue
-  "#dcfce7", // Green
-  "#fce7f3", // Pink
-  "#f3e8ff", // Purple
-  "#fed7d7", // Red
-  "#e0e7ff", // Indigo
-  "#f0f9ff", // Sky
-  "#ecfdf5", // Emerald
-] as const;
-
-export type NoteCategory = (typeof NOTE_CATEGORIES)[number];
-export type NoteColor = (typeof NOTE_COLORS)[number];

@@ -1,71 +1,82 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "../../supabase/client";
-import {
-  Note,
-  CreateNoteData,
-  UpdateNoteData,
-  NoteFilters,
-} from "@/types/note";
+import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { Note, CreateNoteData, UpdateNoteData } from "@/types/note";
+import { useEffect } from "react";
 
 export function useNotes() {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
+  const [notes, setNotes] = useState<Note[]>([]);
   const { toast } = useToast();
 
-  const fetchNotes = async (filters?: NoteFilters) => {
+  useEffect(() => {
+    // Fetch notes on component mount
+    const fetchNotes = async () => {
+      const fetchedNotes = await getNotes();
+      if (fetchedNotes) {
+        setNotes(fetchedNotes);
+      }
+    };
+
+    fetchNotes();
+  }, []);
+
+  // Fetch all notes
+  const getNotes = async (filter?: string): Promise<Note[] | null> => {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      setError(null);
-
-      // Build query parameters
-      const params = new URLSearchParams();
-      if (filters?.category && filters.category !== "all") {
-        params.append("category", filters.category);
-      }
-      if (filters?.is_favorite !== undefined) {
-        params.append("is_favorite", filters.is_favorite.toString());
-      }
-      if (filters?.is_archived !== undefined) {
-        params.append("is_archived", filters.is_archived.toString());
-      }
-      if (filters?.is_pinned !== undefined) {
-        params.append("is_pinned", filters.is_pinned.toString());
-      }
-      if (filters?.search) {
-        params.append("search", filters.search);
-      }
-      if (filters?.tags && filters.tags.length > 0) {
-        params.append("tags", filters.tags.join(","));
-      }
-
-      const response = await fetch(`/api/notes?${params.toString()}`);
-      const result = await response.json();
-
+      const queryParams = filter ? `?filter=${filter}` : "";
+      const response = await fetch(`/api/notes${queryParams}`);
       if (!response.ok) {
-        throw new Error(result.error || "Failed to fetch notes");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch notes");
       }
-
-      setNotes(result.data || []);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch notes";
-      setError(errorMessage);
+      const { data } = await response.json();
+      setNotes(data); // Update local state
+      return data;
+    } catch (err: any) {
+      setError(err.message);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: err.message,
         variant: "destructive",
       });
+      return null;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  // Fetch a single note
+  const getNote = async (id: string): Promise<Note | null> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/notes/${id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch note");
+      }
+      const { data } = await response.json();
+      return data;
+    } catch (err: any) {
+      setError(err.message);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Create a new note
   const createNote = async (noteData: CreateNoteData): Promise<Note | null> => {
+    setIsLoading(true);
+    setError(null);
+
     try {
       const response = await fetch("/api/notes", {
         method: "POST",
@@ -75,36 +86,39 @@ export function useNotes() {
         body: JSON.stringify(noteData),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.error || "Failed to create note");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create note");
       }
 
-      const newNote = result.data;
-      setNotes((prev) => [newNote, ...prev]);
+      const { data } = await response.json();
+      setNotes((prev) => [data, ...prev]); // Add to local state
       toast({
         title: "Success",
         description: "Note created successfully",
       });
-      return newNote;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to create note";
-      setError(errorMessage);
+      return data;
+    } catch (err: any) {
+      setError(err.message);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: err.message,
         variant: "destructive",
       });
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Update a note
   const updateNote = async (
     id: string,
     updates: UpdateNoteData,
   ): Promise<Note | null> => {
+    setIsLoading(true);
+    setError(null);
+
     try {
       const response = await fetch(`/api/notes/${id}`, {
         method: "PUT",
@@ -114,318 +128,289 @@ export function useNotes() {
         body: JSON.stringify(updates),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.error || "Failed to update note");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update note");
       }
 
-      const updatedNote = result.data;
-      setNotes((prev) =>
-        prev.map((note) => (note.id === id ? updatedNote : note)),
-      );
+      const { data } = await response.json();
+      setNotes((prev) => prev.map((note) => (note.id === id ? data : note))); // Update local state
       toast({
         title: "Success",
         description: "Note updated successfully",
       });
-      return updatedNote;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update note";
-      setError(errorMessage);
+      return data;
+    } catch (err: any) {
+      setError(err.message);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: err.message,
         variant: "destructive",
       });
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Delete a note
   const deleteNote = async (id: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+
     try {
       const response = await fetch(`/api/notes/${id}`, {
         method: "DELETE",
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.error || "Failed to delete note");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete note");
       }
 
-      setNotes((prev) => prev.filter((note) => note.id !== id));
+      setNotes((prev) => prev.filter((note) => note.id !== id)); // Remove from local state
       toast({
         title: "Success",
         description: "Note deleted successfully",
       });
       return true;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to delete note";
-      setError(errorMessage);
+    } catch (err: any) {
+      setError(err.message);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: err.message,
         variant: "destructive",
       });
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const toggleFavorite = async (id: string, is_favorite: boolean) => {
+  // Toggle favorite status
+  const toggleFavorite = async (
+    id: string,
+    isFavorite: boolean,
+  ): Promise<Note | null> => {
+    setIsLoading(true);
+    setError(null);
+
     try {
       const response = await fetch(`/api/notes/${id}/favorite`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ is_favorite }),
+        body: JSON.stringify({ is_favorite: isFavorite }),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.error || "Failed to update favorite status");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update favorite status");
       }
 
-      const updatedNote = result.data;
-      setNotes((prev) =>
-        prev.map((note) => (note.id === id ? updatedNote : note)),
-      );
-      return updatedNote;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update favorite status";
+      const { data } = await response.json();
+      setNotes((prev) => prev.map((note) => (note.id === id ? data : note))); // Update local state
+      return data;
+    } catch (err: any) {
+      setError(err.message);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: err.message,
         variant: "destructive",
       });
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const togglePin = async (id: string, is_pinned: boolean) => {
+  // Toggle pin status
+  const togglePin = async (
+    id: string,
+    isPinned: boolean,
+  ): Promise<Note | null> => {
+    setIsLoading(true);
+    setError(null);
+
     try {
       const response = await fetch(`/api/notes/${id}/pin`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ is_pinned }),
+        body: JSON.stringify({ is_pinned: isPinned }),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.error || "Failed to update pin status");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update pin status");
       }
 
-      const updatedNote = result.data;
-      setNotes((prev) =>
-        prev.map((note) => (note.id === id ? updatedNote : note)),
-      );
-      return updatedNote;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update pin status";
+      const { data } = await response.json();
+      setNotes((prev) => prev.map((note) => (note.id === id ? data : note))); // Update local state
+      return data;
+    } catch (err: any) {
+      setError(err.message);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: err.message,
         variant: "destructive",
       });
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const toggleArchive = async (id: string, is_archived: boolean) => {
+  // Toggle archive status
+  const toggleArchive = async (
+    id: string,
+    isArchived: boolean,
+  ): Promise<Note | null> => {
+    setIsLoading(true);
+    setError(null);
+
     try {
       const response = await fetch(`/api/notes/${id}/archive`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ is_archived }),
+        body: JSON.stringify({ is_archived: isArchived }),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.error || "Failed to update archive status");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update archive status");
       }
 
-      const updatedNote = result.data;
-      setNotes((prev) =>
-        prev.map((note) => (note.id === id ? updatedNote : note)),
-      );
-      return updatedNote;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update archive status";
+      const { data } = await response.json();
+      setNotes((prev) => prev.map((note) => (note.id === id ? data : note))); // Update local state
+      return data;
+    } catch (err: any) {
+      setError(err.message);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: err.message,
         variant: "destructive",
       });
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const duplicateNote = async (id: string): Promise<Note | null> => {
+  // Duplicate a note
+  const duplicateNote = async (noteId: string): Promise<Note | null> => {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      const response = await fetch("/api/notes/duplicate", {
+      const response = await fetch(`/api/notes/duplicate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ noteId: id }),
+        body: JSON.stringify({ noteId }),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.error || "Failed to duplicate note");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to duplicate note");
       }
 
-      const duplicatedNote = result.data;
-      setNotes((prev) => [duplicatedNote, ...prev]);
+      const { data } = await response.json();
+      setNotes((prev) => [data, ...prev]); // Add to local state
       toast({
         title: "Success",
         description: "Note duplicated successfully",
       });
-      return duplicatedNote;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to duplicate note";
+      return data;
+    } catch (err: any) {
+      setError(err.message);
       toast({
         title: "Error",
-        description: errorMessage,
+        description: err.message,
         variant: "destructive",
       });
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const getAnalytics = async () => {
+  // Export notes
+  const exportNotes = async (
+    format: string,
+    noteIds?: string[],
+  ): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      const response = await fetch("/api/notes/analytics");
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to fetch analytics");
-      }
-
-      return result.data;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch analytics";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
-  const getTemplates = async () => {
-    try {
-      const response = await fetch("/api/notes/templates");
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to fetch templates");
-      }
-
-      return result.data;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch templates";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
-  const exportNotes = async (format: string = "json", noteIds?: string[]) => {
-    try {
-      const params = new URLSearchParams({ format });
+      let url = `/api/notes/export?format=${format}`;
       if (noteIds && noteIds.length > 0) {
-        params.append("noteIds", noteIds.join(","));
+        url += `&noteIds=${noteIds.join(",")}`;
       }
 
-      const response = await fetch(`/api/notes/export?${params.toString()}`);
-
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.error || "Failed to export notes");
-      }
-
-      // Create download link
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download =
-        response.headers
-          .get("Content-Disposition")
-          ?.split("filename=")[1]
-          ?.replace(/"/g, "") || `notes-export.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast({
-        title: "Success",
-        description: "Notes exported successfully",
-      });
-      return true;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to export notes";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      return false;
+      window.open(url, "_blank");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchNotes();
+  // Get note templates
+  const getTemplates = async () => {
+    setIsLoading(true);
+    setError(null);
 
-    // Set up real-time subscription
-    const channel = supabase
-      .channel("notes_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notes",
-        },
-        () => {
-          fetchNotes();
-        },
-      )
-      .subscribe();
+    try {
+      const response = await fetch(`/api/notes/templates`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch templates");
+      }
+      const { data } = await response.json();
+      return data;
+    } catch (err: any) {
+      setError(err.message);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  // Get analytics
+  const getAnalytics = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/notes/analytics`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch analytics");
+      }
+      const { data } = await response.json();
+      return data;
+    } catch (err: any) {
+      setError(err.message);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return {
-    notes,
-    loading,
+    isLoading,
     error,
-    fetchNotes,
+    notes,
+    loading: isLoading,
+    getNotes,
+    getNote,
     createNote,
     updateNote,
     deleteNote,
@@ -433,8 +418,15 @@ export function useNotes() {
     togglePin,
     toggleArchive,
     duplicateNote,
-    getAnalytics,
-    getTemplates,
     exportNotes,
+    getTemplates,
+    getAnalytics,
+    fetchNotes: async () => {
+      const fetchedNotes = await getNotes();
+      if (fetchedNotes) {
+        setNotes(fetchedNotes);
+      }
+      return fetchedNotes;
+    },
   };
 }

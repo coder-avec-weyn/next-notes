@@ -24,10 +24,10 @@ export function NotesList({ notes, viewMode, onEditNote }: NotesListProps) {
         <div className="bg-muted/50 rounded-full p-6 mb-4">
           <FileText className="w-12 h-12 text-muted-foreground" />
         </div>
-        <h3 className="text-xl font-semibold mb-2 text-foreground">
+        <h3 className="text-xl font-semibold mb-2 text-foreground dark:text-foreground">
           No notes found
         </h3>
-        <p className="text-muted-foreground max-w-md">
+        <p className="text-muted-foreground dark:text-muted-foreground max-w-md">
           Create your first note or adjust your filters to see existing notes.
         </p>
       </motion.div>
