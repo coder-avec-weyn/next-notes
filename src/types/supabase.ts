@@ -405,12 +405,86 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_users_search: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          company: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string | null
+          job_title: string | null
+          location: string | null
+          name: string | null
+          public_notes_count: number | null
+          public_profile: boolean | null
+          username: string | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string | null
+          job_title?: string | null
+          location?: string | null
+          name?: string | null
+          public_notes_count?: never
+          public_profile?: boolean | null
+          username?: string | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string | null
+          job_title?: string | null
+          location?: string | null
+          name?: string | null
+          public_notes_count?: never
+          public_profile?: boolean | null
+          username?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_profile_completion: {
         Args: { user_row: Database["public"]["Tables"]["users"]["Row"] }
         Returns: number
+      }
+      get_user_public_notes_count: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
+      gtrgm_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: { "": unknown }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: { "": unknown }
+        Returns: unknown
       }
       log_user_activity: {
         Args: {
@@ -421,6 +495,18 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: undefined
+      }
+      set_limit: {
+        Args: { "": number }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: { "": string }
+        Returns: string[]
       }
     }
     Enums: {

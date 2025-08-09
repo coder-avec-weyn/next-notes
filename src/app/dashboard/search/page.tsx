@@ -55,25 +55,41 @@ export default function SearchPage() {
 
     setIsSearching(true);
     try {
-      console.log("Searching for:", query);
+      console.log("Frontend: Searching for:", query);
       const response = await fetch(
         `/api/search/users?q=${encodeURIComponent(query)}&limit=20`,
       );
       const result = await response.json();
 
-      console.log("Search response:", result);
+      console.log("Frontend: Search response:", result);
 
       if (!response.ok) {
+        console.error("Frontend: API error:", result);
         throw new Error(result.error || "Failed to search users");
       }
 
-      setSearchResults(result.data || []);
+      const users = result.data || [];
+      console.log(`Frontend: Setting ${users.length} users in results`);
+      setSearchResults(users);
       setHasSearched(true);
+
+      // Show debug info if available
+      if (result.debug) {
+        console.log("Frontend: Debug info:", result.debug);
+      }
+
+      // Show success message if users found
+      if (users.length > 0) {
+        toast({
+          title: "Search Results",
+          description: `Found ${users.length} user${users.length === 1 ? "" : "s"} matching "${query}"`,
+        });
+      }
     } catch (error: any) {
-      console.error("Search error:", error);
+      console.error("Frontend: Search error:", error);
       toast({
         title: "Search Error",
-        description: error.message,
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
       setSearchResults([]);

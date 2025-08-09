@@ -130,6 +130,11 @@ export default function ProfilePage() {
 
       const userProfile = result.data;
       setProfile(userProfile);
+      // Determine profile visibility based on public_profile boolean
+      const profileVisibility = userProfile.public_profile
+        ? "public"
+        : "private";
+
       setFormData({
         username: userProfile.username || "",
         name: userProfile.name || "",
@@ -145,10 +150,12 @@ export default function ProfilePage() {
         language: userProfile.language || "en",
         date_of_birth: userProfile.date_of_birth || "",
         social_links: userProfile.social_links || {},
-        privacy_settings: userProfile.privacy_settings || {
-          profile_visibility: "public",
-          email_visibility: "private",
-          activity_visibility: "friends",
+        privacy_settings: {
+          profile_visibility: profileVisibility,
+          email_visibility:
+            userProfile.privacy_settings?.email_visibility || "private",
+          activity_visibility:
+            userProfile.privacy_settings?.activity_visibility || "friends",
         },
         theme_preference: userProfile.theme_preference,
         notification_preferences: userProfile.notification_preferences,
@@ -231,6 +238,9 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     if (profile) {
+      // Determine profile visibility based on public_profile boolean
+      const profileVisibility = profile.public_profile ? "public" : "private";
+
       setFormData({
         username: profile.username || "",
         name: profile.name || "",
@@ -246,18 +256,18 @@ export default function ProfilePage() {
         language: profile.language || "en",
         date_of_birth: profile.date_of_birth || "",
         social_links: profile.social_links || {},
-        privacy_settings: profile.privacy_settings || {
-          profile_visibility: "public",
-          email_visibility: "private",
-          activity_visibility: "friends",
+        privacy_settings: {
+          profile_visibility: profileVisibility,
+          email_visibility:
+            profile.privacy_settings?.email_visibility || "private",
+          activity_visibility:
+            profile.privacy_settings?.activity_visibility || "friends",
         },
         theme_preference: profile.theme_preference,
         notification_preferences: profile.notification_preferences,
         two_factor_enabled: profile.two_factor_enabled || false,
         public_profile:
-          userProfile.public_profile !== undefined
-            ? userProfile.public_profile
-            : true,
+          profile.public_profile !== undefined ? profile.public_profile : true,
       });
     }
     setIsEditing(false);
@@ -1420,15 +1430,22 @@ export default function ProfilePage() {
                   </Label>
                   <Select
                     value={formData.privacy_settings.profile_visibility}
-                    onValueChange={(value: any) =>
+                    onValueChange={(value: any) => {
                       setFormData((prev) => ({
                         ...prev,
                         privacy_settings: {
                           ...prev.privacy_settings,
                           profile_visibility: value,
                         },
-                      }))
-                    }
+                        // Update public_profile based on profile_visibility
+                        public_profile: value === "public",
+                      }));
+                      // Log activity for profile visibility change
+                      logActivity(
+                        "privacy_change",
+                        `Profile visibility changed to ${value}`,
+                      );
+                    }}
                     disabled={!isEditing}
                   >
                     <SelectTrigger className={cn(!isEditing && "bg-muted")}>

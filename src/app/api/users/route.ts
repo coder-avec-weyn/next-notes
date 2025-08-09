@@ -152,10 +152,43 @@ export async function PUT(request: NextRequest) {
       processedUpdates.date_of_birth = null;
     }
 
+    // Handle profile visibility mapping
+    const finalUpdates = { ...processedUpdates };
+
+    // If privacy_settings.profile_visibility is being updated, sync with public_profile
+    if (finalUpdates.privacy_settings?.profile_visibility) {
+      finalUpdates.public_profile =
+        finalUpdates.privacy_settings.profile_visibility === "public";
+    }
+
+    // If public_profile is being updated directly, ensure privacy_settings is synced
+    if (
+      finalUpdates.public_profile !== undefined &&
+      !finalUpdates.privacy_settings?.profile_visibility
+    ) {
+      // Get current privacy settings first
+      const { data: currentUser } = await supabase
+        .from("users")
+        .select("privacy_settings")
+        .eq("id", user.id)
+        .single();
+
+      const currentPrivacySettings = currentUser?.privacy_settings || {
+        profile_visibility: "public",
+        email_visibility: "private",
+        activity_visibility: "friends",
+      };
+
+      finalUpdates.privacy_settings = {
+        ...currentPrivacySettings,
+        profile_visibility: finalUpdates.public_profile ? "public" : "private",
+      };
+    }
+
     const { data, error } = await supabase
       .from("users")
       .update({
-        ...processedUpdates,
+        ...finalUpdates,
         updated_at: new Date().toISOString(),
       })
       .eq("id", user.id)

@@ -6,7 +6,16 @@ import { createClient } from "../../supabase/server";
 
 export default async function Home() {
   const supabase = await createClient();
-  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
+  let user = null;
+
+  if (supabase) {
+    try {
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+    } catch (error) {
+      console.warn("Failed to get user:", error);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">

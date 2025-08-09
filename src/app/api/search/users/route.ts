@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../supabase/server";
 
-// GET - Search for public users by username, name, full_name, or email
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-
-    if (!supabase) {
-      return NextResponse.json(
-        { error: "Database connection failed" },
-        { status: 500 },
-      );
-    }
 
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
@@ -19,51 +11,98 @@ export async function GET(request: NextRequest) {
 
     if (!query || query.trim().length < 1) {
       return NextResponse.json(
-        { error: "Search query is required" },
+        { error: "Search query is required and must be at least 1 character" },
         { status: 400 },
       );
     }
 
-    const searchQuery = query.trim();
-    console.log("Searching for:", searchQuery);
+    const searchTerm = query.trim();
+    console.log(`[Search API] Searching for: "${searchTerm}"`);
 
-    // Search for users with public profiles using the regular client
-    // The RLS policy "Users can view public profiles" allows this
-    const { data, error } = await supabase
+    // ✅ Point to the public.users table
+    const { data: users, error } = await supabase
       .from("users")
       .select(
-        "id, username, name, full_name, email, bio, avatar_url, created_at, public_profile, location, website, company, job_title",
+        `
+        id,
+        avatar_url,
+        user_id,
+        token_identifier,
+        image,
+        created_at,
+        updated_at,
+        email,
+        name,
+        full_name,
+        bio,
+        theme_preference,
+        notification_preferences,
+        phone,
+        location,
+        website,
+        company,
+        job_title,
+        timezone,
+        language,
+        date_of_birth,
+        social_links,
+        privacy_settings,
+        two_factor_enabled,
+        last_login_at,
+        login_count,
+        profile_completion_percentage,
+        account_status,
+        username,
+        public_profile
+      `,
       )
       .eq("public_profile", true)
       .or(
-        `username.ilike.%${searchQuery}%,name.ilike.%${searchQuery}%,full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`,
+        `username.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%`,
       )
-      .limit(limit)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
     if (error) {
-      console.error("Error searching users:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("[Search API] Database error:", error);
+      return NextResponse.json(
+        { error: "Failed to search users", details: error.message },
+        { status: 500 },
+      );
     }
 
-    console.log(`Found ${data?.length || 0} users matching "${searchQuery}"`);
-    
-    // Debug: Let's also check how many public users exist in total
-    const { data: allPublicUsers, error: countError } = await supabase
-      .from("users")
-      .select("id, username, name, full_name, public_profile")
-      .eq("public_profile", true)
-      .limit(5);
-      
-    if (!countError) {
-      console.log("Sample public users:", allPublicUsers);
-    }
+    // Get public notes count for each user
+    const usersWithNotesCount = await Promise.all(
+      (users || []).map(async (user) => {
+        const { count } = await supabase
+          .from("notes")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("is_public", true);
 
-    return NextResponse.json({ data: data || [] });
+        return {
+          ...user,
+          public_notes_count: count || 0,
+        };
+      }),
+    );
+
+    console.log(
+      `[Search API] Found ${usersWithNotesCount.length} users matching "${searchTerm}"`,
+    );
+
+    return NextResponse.json({
+      data: usersWithNotesCount,
+      total: usersWithNotesCount.length,
+      query: searchTerm,
+    });
   } catch (error) {
-    console.error("Unexpected error in user search:", error);
+    console.error("[Search API] Unexpected error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 },
     );
   }
