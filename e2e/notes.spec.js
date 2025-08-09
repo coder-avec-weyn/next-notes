@@ -2,6 +2,31 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Notes Application", () => {
+  test("should have proper PWA meta tags", async ({ page }) => {
+    await page.goto("/");
+
+    // Check for manifest link
+    const manifestLink = await page.$eval(
+      'link[rel="manifest"]',
+      (el) => el.href,
+    );
+    expect(manifestLink).toBeTruthy();
+
+    // Check for theme-color meta tag
+    const themeColor = await page.$eval(
+      'meta[name="theme-color"]',
+      (el) => el.content,
+    );
+    expect(themeColor).toBeTruthy();
+
+    // Check for apple-mobile-web-app-capable meta tag
+    const appleCapable = await page.$eval(
+      'meta[name="apple-mobile-web-app-capable"]',
+      (el) => el.content,
+    );
+    expect(appleCapable).toBe("yes");
+  });
+
   test.beforeEach(async ({ page }) => {
     // Navigate to the notes page
     await page.goto("/dashboard/notes");
@@ -136,5 +161,44 @@ test.describe("Notes Application", () => {
 
     // Reset media emulation
     await page.emulateMedia({ reducedMotion: "no-preference" });
+  });
+
+  test("should have proper offline support", async ({ page, context }) => {
+    // First load the page normally
+    await page.goto("/dashboard/notes");
+    await page.waitForSelector('h3:has-text("Notes")');
+
+    // Create a test note to verify offline access
+    await page.click('button:has-text("New Note")');
+    await page.waitForSelector('h2:has-text("Create Note")');
+    await page.fill('input[placeholder="Note title..."]', "Offline Test Note");
+    await page.fill(
+      'textarea[placeholder="Start writing your note..."]',
+      "This note should be accessible offline",
+    );
+    await page.click('button:has-text("Save")');
+    await page.waitForSelector('h3:has-text("Offline Test Note")');
+
+    // Simulate offline mode
+    await context.setOffline(true);
+
+    // Reload the page and check if content is still accessible
+    await page.reload();
+
+    // Verify the note is still visible in offline mode
+    await page.waitForSelector('h3:has-text("Offline Test Note")', {
+      timeout: 10000,
+    });
+
+    // Return to online mode
+    await context.setOffline(false);
+
+    // Clean up - delete the test note
+    await page.click('h3:has-text("Offline Test Note")');
+    await page.waitForSelector('h2:has-text("Edit Note")');
+    await page.click('button:has-text("Close")');
+    await page.click('button[aria-haspopup="menu"]');
+    await page.click('div[role="menuitem"]:has-text("Delete")');
+    await page.click('button:has-text("Delete")');
   });
 });

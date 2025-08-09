@@ -62,10 +62,31 @@
   :root {
     --theme-transition: background-color 0.3s ease, color 0.3s ease,
       border-color 0.3s ease, fill 0.3s ease, stroke 0.3s ease;
+    --page-transition: opacity 0.3s ease, transform 0.3s ease;
   }
 
   * {
     transition: var(--theme-transition);
+  }
+
+  /* Page transition animations */
+  .page-enter {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  .page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: var(--page-transition);
+  }
+
+  /* Respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition-duration: 0.001ms !important;
+      animation-duration: 0.001ms !important;
+    }
   }
 }
 
@@ -104,7 +125,22 @@
 
   /* Mobile touch improvements */
   .touch-area {
-    @apply min-h-[44px] min-w-[44px];
+    @apply min-h-[48px] min-w-[48px];
+  }
+
+  /* Enhanced touch targets for interactive elements */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role="button"] {
+    @apply touch-action-manipulation;
+  }
+
+  /* Custom touch action utility */
+  .touch-action-manipulation {
+    touch-action: manipulation;
   }
 
   /* Font scaling for better readability */

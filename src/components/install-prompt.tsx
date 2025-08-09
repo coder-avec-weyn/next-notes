@@ -30,26 +30,28 @@ export function InstallPrompt({
     useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [showFloatingButton, setShowFloatingButton] = useState(true); // Always show by default
+  const [showFloatingButton, setShowFloatingButton] = useState(false); // Initially hidden until beforeinstallprompt fires
   const [isMobile, setIsMobile] = useState(false);
   const [isSafari, setIsSafari] = useState(false);
   const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
     // Check if the app is already installed
-    const isAppInstalled =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      window.matchMedia("(display-mode: fullscreen)").matches ||
-      window.matchMedia("(display-mode: minimal-ui)").matches ||
-      // @ts-ignore: Safari specific property
-      window.navigator.standalone === true;
+    const checkInstallStatus = () => {
+      const isAppInstalled =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.matchMedia("(display-mode: fullscreen)").matches ||
+        window.matchMedia("(display-mode: minimal-ui)").matches ||
+        // @ts-ignore: Safari specific property
+        window.navigator.standalone === true;
 
-    setIsStandalone(isAppInstalled);
-    
-    // Hide floating button if app is installed
-    if (isAppInstalled) {
-      setShowFloatingButton(false);
-    }
+      setIsStandalone(isAppInstalled);
+
+      // Hide floating button if app is installed
+      if (isAppInstalled) {
+        setShowFloatingButton(false);
+      }
+    };
 
     // Detect if using mobile device
     const checkMobile = () => {
@@ -65,14 +67,20 @@ export function InstallPrompt({
       return /^((?!chrome|android).)*safari/i.test(userAgent);
     };
 
+    // Run initial checks
+    checkInstallStatus();
     setIsMobile(checkMobile());
     setIsSafari(checkSafari());
 
+    // This is the critical event handler for PWA installation
     const handleBeforeInstallPrompt = (e: Event) => {
       // Prevent Chrome 67 and earlier from automatically showing the prompt
       e.preventDefault();
+      console.log("Captured beforeinstallprompt event");
+
       // Store the event for later use
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+
       // Show our custom install prompt after a delay if not explicitly showing as button
       if (!showAsButton) {
         setTimeout(() => {
@@ -80,56 +88,151 @@ export function InstallPrompt({
         }, 3000); // Show after 3 seconds
       }
 
-      // Mark as installable for the explicit button
+      // Mark as installable and show the floating button
       setIsInstallable(true);
+      setShowFloatingButton(true);
+
+      // Force the browser to show the install prompt in the address bar
+      // by triggering user interaction
+      document.addEventListener(
+        "click",
+        function promptOnUserInteraction() {
+          // Remove this listener after first interaction
+          document.removeEventListener("click", promptOnUserInteraction);
+          // Don't trigger the prompt immediately, wait a moment
+          setTimeout(() => {
+            // This doesn't actually show the prompt, but ensures the browser
+            // knows the user has interacted with the page
+            console.log(
+              "User interaction detected, browser may show install prompt",
+            );
+          }, 300);
+        },
+        { once: true },
+      );
     };
 
+    // Listen for app installed event
+    const handleAppInstalled = () => {
+      console.log("App was installed");
+      setIsStandalone(true);
+      setShowFloatingButton(false);
+      setDeferredPrompt(null);
+
+      // Show success notification
+      const notification = document.createElement("div");
+      notification.className =
+        "fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50";
+      notification.innerHTML = "NotesApp successfully installed!";
+      document.body.appendChild(notification);
+
+      // Remove notification after 3 seconds
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 3000);
+    };
+
+    // Listen for display mode changes
+    const handleDisplayModeChange = () => {
+      checkInstallStatus();
+    };
+
+    // Add all event listeners
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
+    window
+      .matchMedia("(display-mode: standalone)")
+      .addEventListener("change", handleDisplayModeChange);
 
     // If it's Safari on iOS, we can't capture the beforeinstallprompt event
     // So we'll show instructions for manual installation
-    if (checkSafari() && checkMobile() && !isAppInstalled) {
+    if (checkSafari() && checkMobile() && !isStandalone) {
       setIsInstallable(true);
+      setShowFloatingButton(true);
     }
 
+    // Check if the app meets PWA criteria
+    const checkPWACriteria = async () => {
+      try {
+        // Check if service worker is registered
+        const swRegistration = await navigator.serviceWorker.getRegistration();
+        if (swRegistration) {
+          console.log("Service worker is registered", swRegistration);
+          // Only show the floating button for Safari or if beforeinstallprompt hasn't fired yet
+          if ((checkSafari() && checkMobile()) || deferredPrompt) {
+            setShowFloatingButton(true);
+          }
+        } else {
+          console.warn("Service worker not registered");
+        }
+      } catch (error) {
+        console.error("Error checking service worker:", error);
+      }
+    };
+
+    // Run the check
+    checkPWACriteria();
+
     return () => {
+      // Clean up all event listeners
       window.removeEventListener(
         "beforeinstallprompt",
         handleBeforeInstallPrompt,
       );
+      window.removeEventListener("appinstalled", handleAppInstalled);
+      window
+        .matchMedia("(display-mode: standalone)")
+        .removeEventListener("change", handleDisplayModeChange);
     };
-  }, [showAsButton]);
+  }, [showAsButton, deferredPrompt]);
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
-      // Show the browser's install prompt
-      deferredPrompt.prompt();
+      try {
+        // Log before showing prompt
+        console.log("Triggering install prompt...");
 
-      // Wait for the user to respond to the prompt
-      const choiceResult = await deferredPrompt.userChoice;
+        // Show the browser's install prompt
+        await deferredPrompt.prompt();
 
-      if (choiceResult.outcome === "accepted") {
-        console.log("User accepted the install prompt");
-        setIsStandalone(true);
-        setShowFloatingButton(false);
-      } else {
-        console.log("User dismissed the install prompt");
+        // Wait for the user to respond to the prompt
+        const choiceResult = await deferredPrompt.userChoice;
+
+        if (choiceResult.outcome === "accepted") {
+          console.log("User accepted the install prompt");
+          setIsStandalone(true);
+          setShowFloatingButton(false);
+          // Show success message
+          alert(
+            "Installation started! Look for NotesApp on your home screen or app drawer.",
+          );
+        } else {
+          console.log("User dismissed the install prompt");
+          // Keep the button visible for future attempts
+          setShowFloatingButton(true);
+        }
+      } catch (error) {
+        console.error("Error showing install prompt:", error);
+        alert(
+          "There was an error starting the installation. Please try again.",
+        );
+      } finally {
+        // Clear the saved prompt as it can't be used again
+        setDeferredPrompt(null);
+        setShowPrompt(false);
       }
-
-      // Clear the saved prompt as it can't be used again
-      setDeferredPrompt(null);
-      setShowPrompt(false);
     } else if (isSafari && isMobile) {
       // Show Safari-specific instructions
       setShowPrompt(true);
     } else {
-      // Fallback: Show generic installation instructions
+      // Fallback: Show generic installation instructions with more details
       alert(
         "To install this app:\n\n" +
-          "• On Chrome/Edge: Look for the install icon in the address bar\n" +
+          "• On Chrome/Edge: Look for the install icon (+) in the address bar\n" +
           "• On Firefox: Use the 'Install' option in the menu\n" +
           "• On Safari (iOS): Tap Share → Add to Home Screen\n" +
-          "• On Safari (macOS): File → Add to Dock",
+          "• On Safari (macOS): File → Add to Dock\n\n" +
+          "Note: If you don't see the install option, you may already have the app installed or your browser may not support PWA installation.",
       );
     }
   };
@@ -213,14 +316,18 @@ export function InstallPrompt({
         </div>
       )}
 
-      {/* Floating install button - ALWAYS visible in bottom left corner unless app is installed */}
+      {/* Floating install button - Only visible after beforeinstallprompt fires or on Safari */}
       {showFloatingButton && (
         <button
           onClick={handleInstallClick}
-          className="fixed bottom-4 left-4 bg-primary text-primary-foreground rounded-full p-3 shadow-lg z-40 hover:opacity-90 transition-all animate-pulse touch-area"
+          className="fixed bottom-4 left-4 bg-primary text-primary-foreground rounded-full p-3 shadow-lg z-40 hover:opacity-90 transition-all animate-pulse touch-area min-w-[48px] min-h-[48px] flex items-center justify-center"
           aria-label="Install app"
+          style={{ touchAction: "manipulation" }}
         >
           <Download size={24} />
+          {isInstallable && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+          )}
         </button>
       )}
     </>
