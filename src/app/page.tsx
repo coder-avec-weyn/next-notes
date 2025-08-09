@@ -1,10 +1,15 @@
 import Footer from "@/components/footer";
 import Hero from "@/components/hero";
 import Navbar from "@/components/navbar";
+import { InstallPrompt } from "@/components/install-prompt";
 import { ArrowUpRight, CheckCircle2, Shield, Users, Zap } from "lucide-react";
 import { createClient } from "../../supabase/server";
 
 export default async function Home() {
+  // This ensures the InstallPrompt component is only rendered client-side
+  const ClientOnly = ({ children }: { children: React.ReactNode }) => {
+    return <div className="client-only">{children}</div>;
+  };
   const supabase = await createClient();
   let user = null;
 
@@ -97,13 +102,22 @@ export default async function Home() {
             Join thousands of satisfied customers who trust us with their
             business.
           </p>
-          <a
-            href="/dashboard"
-            className="inline-flex items-center px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Get Started Now
-            <ArrowUpRight className="ml-2 w-4 h-4" />
-          </a>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="/dashboard"
+              className="inline-flex items-center px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Get Started Now
+              <ArrowUpRight className="ml-2 w-4 h-4" />
+            </a>
+            <div className="client-only">
+              <InstallPrompt
+                showAsButton={true}
+                buttonVariant="secondary"
+                className="px-6 py-3"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

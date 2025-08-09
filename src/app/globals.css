@@ -127,4 +127,30 @@
       @apply max-h-[80vh] overflow-y-auto py-2;
     }
   }
+
+  /* Safari-specific fixes */
+  .safari-sticky {
+    position: -webkit-sticky;
+    position: sticky;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    /* Force hardware acceleration to fix Safari issues */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  /* Improved PWA install button */
+  @keyframes pulse-subtle {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  .pwa-install-button {
+    animation: pulse-subtle 2s infinite;
+  }
 }

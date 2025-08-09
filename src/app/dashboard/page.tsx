@@ -17,6 +17,7 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
+import { InstallPrompt } from "@/components/install-prompt";
 import { createClient } from "../../../supabase/client";
 import { useNotes } from "@/hooks/use-notes";
 import { Button } from "@/components/ui/button";
@@ -142,6 +143,7 @@ export default function Dashboard() {
                 Pinned
               </Button>
             </Link>
+            <InstallPrompt showAsButton={true} buttonVariant="outline" />
           </div>
         </motion.div>
 

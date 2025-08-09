@@ -1,4 +1,95 @@
 /** @type {import('next').NextConfig} */
+const withPWA = require("next-pwa")({
+  dest: "public",
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === "development",
+  // Enhanced caching strategy
+  runtimeCaching: [
+    {
+      // Cache static assets
+      urlPattern:
+        /^https:\/\/.*\.(?:png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot)$/i,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "static-assets",
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+        },
+      },
+    },
+    {
+      // Cache API responses
+      urlPattern: /^https:\/\/.*\/api\/.*$/i,
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "api-cache",
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 60 * 60, // 1 hour
+        },
+        networkTimeoutSeconds: 10,
+      },
+    },
+    {
+      // Cache Supabase API responses
+      urlPattern: new RegExp(process.env.NEXT_PUBLIC_SUPABASE_URL + ".*"),
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "supabase-api-cache",
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 5 * 60, // 5 minutes
+        },
+      },
+    },
+    {
+      // Cache page navigations
+      urlPattern: /\/dashboard\/.*$/i,
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "page-cache",
+        expiration: {
+          maxEntries: 30,
+          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+        },
+      },
+    },
+    {
+      // Cache other pages
+      urlPattern: /\/(?!api\/|_next\/|_proxy\/|_static\/|_vercel\/)/i,
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "pages-cache",
+        expiration: {
+          maxEntries: 30,
+          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+        },
+      },
+    },
+    {
+      // Cache Google Fonts stylesheets
+      urlPattern: /^https:\/\/fonts\.googleapis\.com/,
+      handler: "StaleWhileRevalidate",
+      options: {
+        cacheName: "google-fonts-stylesheets",
+      },
+    },
+    {
+      // Cache Google Fonts webfonts
+      urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "google-fonts-webfonts",
+        expiration: {
+          maxEntries: 20,
+          maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+        },
+      },
+    },
+  ],
+});
 
 const nextConfig = {
   images: {
@@ -64,4 +155,4 @@ if (!nextConfig.transpilePackages.includes("framer-motion")) {
   nextConfig.transpilePackages.push("framer-motion");
 }
 
-module.exports = nextConfig;
+module.exports = withPWA(nextConfig);
