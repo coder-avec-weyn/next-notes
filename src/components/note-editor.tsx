@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import {
   X,
   Save,
@@ -75,12 +75,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import {
-  slideUp,
-  fadeIn,
-  buttonPress,
-  modalAnimation,
-} from "@/utils/animations";
+import { fadeIn, modalAnimation } from "@/utils/animations";
 import { cn } from "@/lib/utils";
 import "../app/globals.css";
 import { format } from "date-fns";
@@ -358,80 +353,76 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
   };
 
   return (
-    <motion.div
+    <div
       className={cn(
         "fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4",
         isFullscreen ? "p-0" : "p-4",
       )}
-      initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-      animate={{ opacity: 1, backdropFilter: "blur(4px)" }}
-      exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="note-editor-title"
-      transition={{ duration: 0.3 }}
+      style={{ animation: "fadeIn 0.3s ease-out" }}
     >
-      <motion.div
+      <div
         className={cn(
-          "bg-card rounded-xl shadow-2xl overflow-auto flex flex-col",
+          "bg-card rounded-xl shadow-2xl overflow-hidden flex flex-col",
           isFullscreen
             ? "w-full h-full rounded-none"
             : "w-full max-w-5xl max-h-[90vh]",
         )}
-        initial={{ opacity: 0, y: 100 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 100 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
         onClick={(e) => e.stopPropagation()}
-        style={{ backgroundColor: color }}
+        style={{
+          backgroundColor: color,
+          animation: "slideUp 0.4s ease-out",
+        }}
         role="document"
       >
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-b bg-background/50 backdrop-blur-sm gap-3 sm:gap-0">
-          <div className="flex items-center gap-4">
+        {/* Header - Simplified and more consistent */}
+        <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b bg-background/80 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
             <h2
               className="text-xl font-semibold text-foreground"
               id="note-editor-title"
             >
               {isEditing ? "Edit Note" : "Create Note"}
             </h2>
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
               <Button
                 variant={isFavorite ? "default" : "outline"}
                 size="sm"
                 onClick={() => setIsFavorite(!isFavorite)}
                 className={cn(
-                  "gap-1 transition-all duration-200 h-9 px-3 sm:h-8 sm:px-3",
+                  "h-8 px-3 gap-1",
                   isFavorite && "bg-yellow-500 hover:bg-yellow-600 text-white",
                 )}
               >
                 <Star className={cn("w-4 h-4", isFavorite && "fill-current")} />
-                <span className="sm:inline">Favorite</span>
+                <span className="hidden sm:inline">Favorite</span>
               </Button>
               <Button
                 variant={isPinned ? "default" : "outline"}
                 size="sm"
                 onClick={() => setIsPinned(!isPinned)}
                 className={cn(
-                  "gap-1 transition-all duration-200 h-9 px-3 sm:h-8 sm:px-3",
+                  "h-8 px-3 gap-1",
                   isPinned && "bg-blue-500 hover:bg-blue-600 text-white",
                 )}
               >
                 <Pin className={cn("w-4 h-4", isPinned && "fill-current")} />
-                <span className="sm:inline">Pin</span>
+                <span className="hidden sm:inline">Pin</span>
               </Button>
               <Button
                 variant={isPublic ? "default" : "outline"}
                 size="sm"
                 onClick={() => setIsPublic(!isPublic)}
                 className={cn(
-                  "gap-1 transition-all duration-200 h-9 px-3 sm:h-8 sm:px-3",
+                  "h-8 px-3 gap-1",
                   isPublic && "bg-green-500 hover:bg-green-600 text-white",
                 )}
               >
                 <Globe className={cn("w-4 h-4", isPublic && "fill-current")} />
-                <span className="sm:inline">Public</span>
+                <span className="hidden sm:inline">Public</span>
               </Button>
             </div>
           </div>
@@ -441,7 +432,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
               variant="ghost"
               size="sm"
               onClick={toggleFullscreen}
-              className="hover:bg-muted transition-all duration-200"
+              className="h-8 w-8 p-0 hover:bg-muted"
               title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
             >
               {isFullscreen ? (
@@ -454,67 +445,51 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
               variant="ghost"
               size="sm"
               onClick={toggleSidebar}
-              className="hover:bg-muted transition-all duration-200 lg:hidden"
+              className="h-8 w-8 p-0 hover:bg-muted lg:hidden"
               title={sidebarVisible ? "Hide sidebar" : "Show sidebar"}
             >
               {sidebarVisible ? (
-                <ChevronUp className="w-4 h-4" />
+                <ChevronUp className="w-3.5 h-3.5" />
               ) : (
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-3.5 h-3.5" />
               )}
             </Button>
-            <motion.div {...buttonPress}>
-              <Button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="gap-2 bg-green-600 hover:bg-green-700 text-white transition-all duration-200"
-              >
-                <AnimatePresence mode="wait">
-                  {isSaving ? (
-                    <motion.div
-                      key="saving"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      className="flex items-center gap-2"
-                    >
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Saving...
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="save"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      className="flex items-center gap-2"
-                    >
-                      <Save className="w-4 h-4" />
-                      Save
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </Button>
-            </motion.div>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="h-8 gap-2 bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isSaving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Save
+                </>
+              )}
+            </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="hover:bg-red-100 hover:text-red-600 transition-all duration-200"
+              className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
             >
               <X className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content - Improved layout */}
         <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-          {/* Main Editor */}
+          {/* Main Editor - More space efficient */}
           <div
-            className="flex-1 p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-120px)]"
+            className="flex-1 p-4 overflow-y-auto max-h-[calc(90vh-64px)]"
             ref={contentRef}
           >
-            <div className="space-y-4">
+            <div className="space-y-4 max-w-3xl mx-auto">
               {/* Title */}
               <div>
                 <Input
@@ -532,7 +507,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                   variant={showWritingAssistant ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setShowWritingAssistant(!showWritingAssistant)}
-                  className="ml-2 gap-1 text-xs transition-all duration-200"
+                  className="ml-2 gap-1 text-xs"
                 >
                   <Sparkles className="h-3.5 w-3.5" />
                   AI Writing Assistant
@@ -550,308 +525,283 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                 />
               </div>
 
-              {/* AI Writing Assistant */}
-              <AnimatePresence>
-                {showWritingAssistant && (
-                  <motion.div
-                    ref={aiAssistantRef}
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="border rounded-lg overflow-hidden bg-gradient-to-br from-background to-muted/20 shadow-sm"
-                  >
-                    <div className="bg-muted/30 p-3 border-b flex items-center justify-between sticky top-0 z-10">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-primary" />
-                        <h3 className="text-sm font-medium">
-                          AI Writing Assistant
-                        </h3>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowWritingAssistant(false)}
-                          className="h-7 w-7 p-0"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
+              {/* AI Writing Assistant - Improved UI */}
+              {showWritingAssistant && (
+                <div
+                  ref={aiAssistantRef}
+                  className="border rounded-lg overflow-hidden bg-gradient-to-br from-background to-muted/20 shadow-sm"
+                  style={{ animation: "fadeIn 0.3s ease-out" }}
+                >
+                  <div className="bg-muted/30 p-3 border-b flex items-center justify-between sticky top-0 z-10">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      <h3 className="text-sm font-medium">
+                        AI Writing Assistant
+                      </h3>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowWritingAssistant(false)}
+                      className="h-7 w-7 p-0"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+
+                  <div className="p-3 space-y-3">
+                    {/* AI Mode Selection - Better organized */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <Button
+                        size="sm"
+                        variant={aiMode === "improve" ? "default" : "outline"}
+                        onClick={() => setAiMode("improve")}
+                        className="text-xs gap-1 w-full"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Improve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={aiMode === "rewrite" ? "default" : "outline"}
+                        onClick={() => setAiMode("rewrite")}
+                        className="text-xs gap-1 w-full"
+                      >
+                        <Wand2 className="h-3 w-3" />
+                        Rewrite
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={aiMode === "style" ? "default" : "outline"}
+                        onClick={() => setAiMode("style")}
+                        className="text-xs gap-1 w-full"
+                      >
+                        <Type className="h-3 w-3" />
+                        Style
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={aiMode === "custom" ? "default" : "outline"}
+                        onClick={() => setAiMode("custom")}
+                        className="text-xs gap-1 w-full"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        Custom
+                      </Button>
                     </div>
 
-                    <div className="p-3 space-y-3">
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant={aiMode === "improve" ? "default" : "outline"}
-                          onClick={() => setAiMode("improve")}
-                          className="text-xs gap-1 transition-all duration-200"
-                        >
-                          <Pencil className="h-3 w-3" />
-                          Improve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={aiMode === "rewrite" ? "default" : "outline"}
-                          onClick={() => setAiMode("rewrite")}
-                          className="text-xs gap-1 transition-all duration-200"
-                        >
-                          <Wand2 className="h-3 w-3" />
-                          Rewrite
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={aiMode === "style" ? "default" : "outline"}
-                          onClick={() => setAiMode("style")}
-                          className="text-xs gap-1 transition-all duration-200"
-                        >
-                          <Type className="h-3 w-3" />
-                          Style
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={aiMode === "custom" ? "default" : "outline"}
-                          onClick={() => setAiMode("custom")}
-                          className="text-xs gap-1 transition-all duration-200"
-                        >
-                          <Sparkles className="h-3 w-3" />
-                          Custom
-                        </Button>
-                      </div>
-
-                      {aiMode === "style" && (
-                        <div className="flex flex-wrap gap-2">
-                          <Badge
-                            variant={
-                              aiStyle === "formal" ? "default" : "outline"
-                            }
-                            className={`cursor-pointer transition-all duration-200 hover:scale-105 ${aiStyle === "formal" ? "bg-primary" : ""}`}
-                            onClick={() => setAiStyle("formal")}
-                          >
-                            Formal
-                          </Badge>
-                          <Badge
-                            variant={
-                              aiStyle === "casual" ? "default" : "outline"
-                            }
-                            className={`cursor-pointer transition-all duration-200 hover:scale-105 ${aiStyle === "casual" ? "bg-primary" : ""}`}
-                            onClick={() => setAiStyle("casual")}
-                          >
-                            Casual
-                          </Badge>
-                          <Badge
-                            variant={
-                              aiStyle === "concise" ? "default" : "outline"
-                            }
-                            className={`cursor-pointer transition-all duration-200 hover:scale-105 ${aiStyle === "concise" ? "bg-primary" : ""}`}
-                            onClick={() => setAiStyle("concise")}
-                          >
-                            Concise
-                          </Badge>
-                          <Badge
-                            variant={
-                              aiStyle === "creative" ? "default" : "outline"
-                            }
-                            className={`cursor-pointer transition-all duration-200 hover:scale-105 ${aiStyle === "creative" ? "bg-primary" : ""}`}
-                            onClick={() => setAiStyle("creative")}
-                          >
-                            Creative
-                          </Badge>
-                        </div>
-                      )}
-
-                      {aiMode === "custom" && (
-                        <div className="space-y-2">
-                          <div className="relative">
-                            <Input
-                              placeholder="Enter your custom instruction (e.g., 'Make it more professional', 'Summarize this', 'Add more details')..."
-                              value={customPrompt}
-                              onChange={(e) => setCustomPrompt(e.target.value)}
-                              className="text-xs pr-24"
-                            />
-                            <div className="absolute right-1 top-1/2 -translate-y-1/2">
-                              {customPrompt.trim() && (
-                                <Button
-                                  size="sm"
-                                  className="h-6 text-xs"
-                                  onClick={() => {
-                                    setAiMode("custom");
-                                    handleAiAssist();
-                                  }}
-                                >
-                                  Generate
-                                </Button>
+                    {/* Style options - Better organized */}
+                    {aiMode === "style" && (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {["formal", "casual", "concise", "creative"].map(
+                          (style) => (
+                            <Badge
+                              key={style}
+                              variant={
+                                aiStyle === style ? "default" : "outline"
+                              }
+                              className={cn(
+                                "cursor-pointer transition-all text-center py-1",
+                                aiStyle === style ? "bg-primary" : "",
                               )}
-                            </div>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            💡 Examples: &quot;Write a program for Hello World
-                            in Python&quot;, &quot;Summarize this&quot;,
-                            &quot;Add more details&quot;, &quot;Fix
-                            grammar&quot;
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="flex justify-between">
-                        <Button
-                          size="sm"
-                          onClick={handleAiAssist}
-                          disabled={
-                            (aiMode !== "custom" && !content.trim()) ||
-                            aiLoading ||
-                            (aiMode === "custom" && !customPrompt.trim())
-                          }
-                          className="text-xs gap-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200"
-                        >
-                          {aiLoading ? (
-                            <>
-                              <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                              Processing...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="h-3 w-3" />
-                              {aiMode === "custom"
-                                ? "Apply Custom Prompt"
-                                : "Generate Suggestion"}
-                            </>
-                          )}
-                        </Button>
-
-                        {aiSuggestion && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setAiSuggestion("");
-                              setEditedAiResponse("");
-                              setAiResponseChunks([]);
-                            }}
-                            className="text-xs gap-1 text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash className="h-3 w-3" />
-                            Clear
-                          </Button>
+                              onClick={() => setAiStyle(style as any)}
+                            >
+                              {style.charAt(0).toUpperCase() + style.slice(1)}
+                            </Badge>
+                          ),
                         )}
                       </div>
+                    )}
 
-                      {aiError && (
-                        <div className="p-2 bg-destructive/10 text-destructive text-xs rounded">
-                          {aiError}
+                    {/* Custom prompt - Improved layout */}
+                    {aiMode === "custom" && (
+                      <div className="space-y-2">
+                        <div className="relative">
+                          <Input
+                            placeholder="Enter your custom instruction..."
+                            value={customPrompt}
+                            onChange={(e) => setCustomPrompt(e.target.value)}
+                            className="text-xs pr-24"
+                          />
+                          <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                            {customPrompt.trim() && (
+                              <Button
+                                size="sm"
+                                className="h-6 text-xs"
+                                onClick={() => {
+                                  setAiMode("custom");
+                                  handleAiAssist();
+                                }}
+                              >
+                                Generate
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                      )}
+                        <p className="text-xs text-muted-foreground">
+                          💡 Examples: &quot;Write a program for Hello World in
+                          Python&quot;, &quot;Summarize this&quot;, &quot;Add
+                          more details&quot;, &quot;Fix grammar&quot;
+                        </p>
+                      </div>
+                    )}
 
-                      {aiLoading && (
-                        <div className="p-4 flex flex-col items-center justify-center">
-                          <LoadingSpinner size="md" />
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            Generating AI response...
-                          </p>
-                        </div>
-                      )}
+                    {/* Action buttons - Better organized */}
+                    <div className="flex justify-between">
+                      <Button
+                        size="sm"
+                        onClick={handleAiAssist}
+                        disabled={
+                          (aiMode !== "custom" && !content.trim()) ||
+                          aiLoading ||
+                          (aiMode === "custom" && !customPrompt.trim())
+                        }
+                        className="text-xs gap-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                      >
+                        {aiLoading ? (
+                          <>
+                            <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-3 w-3" />
+                            {aiMode === "custom"
+                              ? "Apply Custom Prompt"
+                              : "Generate Suggestion"}
+                          </>
+                        )}
+                      </Button>
 
                       {aiSuggestion && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="border rounded-lg p-4 bg-gradient-to-br from-muted/30 to-muted/10 text-sm max-h-[400px] overflow-y-auto shadow-sm"
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setAiSuggestion("");
+                            setEditedAiResponse("");
+                            setAiResponseChunks([]);
+                          }}
+                          className="text-xs gap-1 text-destructive hover:bg-destructive/10"
                         >
-                          <div className="flex items-center justify-between gap-2 mb-3 sticky top-0 bg-gradient-to-b from-muted/50 to-transparent backdrop-blur-sm p-1 rounded">
-                            <div className="flex items-center gap-2">
-                              <Sparkles className="h-3.5 w-3.5 text-primary" />
-                              <span className="text-xs font-medium text-muted-foreground">
-                                AI Preview - Edit before applying
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-6 px-2 text-xs"
-                                onClick={() =>
-                                  copyToClipboard(editedAiResponse)
-                                }
-                                title="Copy to clipboard"
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="default"
-                                className="h-6 px-2 text-xs"
-                                onClick={applyAiSuggestion}
-                              >
-                                <Check className="h-3 w-3 mr-1" />
-                                Apply
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* Editable AI response */}
-                          <div className="relative">
-                            <RichTextEditor
-                              value={editedAiResponse}
-                              onChange={setEditedAiResponse}
-                              className="min-h-[150px] p-3 text-sm border rounded bg-background/50 w-full resize-y"
-                              minHeight="150px"
-                            />
-                          </div>
-
-                          {/* HTML Preview */}
-                          <div className="mt-3 border-t pt-3">
-                            <div className="flex items-center justify-between gap-2 mb-2">
-                              <span className="text-xs font-medium text-muted-foreground">
-                                Formatted Preview
-                              </span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-6 px-2 text-xs"
-                                onClick={applyAiSuggestion}
-                              >
-                                <Check className="h-3 w-3 mr-1" />
-                                Apply to Note
-                              </Button>
-                            </div>
-                            <div
-                              className="prose prose-sm max-w-none dark:prose-invert overflow-auto p-3 rounded bg-background/50 border"
-                              dangerouslySetInnerHTML={{
-                                __html: editedAiResponse,
-                              }}
-                            />
-                          </div>
-                        </motion.div>
+                          <Trash className="h-3 w-3" />
+                          Clear
+                        </Button>
                       )}
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+
+                    {/* Error message */}
+                    {aiError && (
+                      <div className="p-2 bg-destructive/10 text-destructive text-xs rounded">
+                        {aiError}
+                      </div>
+                    )}
+
+                    {/* Loading state */}
+                    {aiLoading && (
+                      <div className="p-4 flex flex-col items-center justify-center">
+                        <LoadingSpinner size="md" />
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Generating AI response...
+                        </p>
+                      </div>
+                    )}
+
+                    {/* AI suggestion result - Improved layout */}
+                    {aiSuggestion && (
+                      <div
+                        className="border rounded-lg p-4 bg-gradient-to-br from-muted/30 to-muted/10 text-sm max-h-[400px] overflow-y-auto shadow-sm"
+                        style={{ animation: "fadeIn 0.3s ease-out" }}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-3 sticky top-0 bg-gradient-to-b from-muted/50 to-transparent backdrop-blur-sm p-1 rounded">
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="h-3.5 w-3.5 text-primary" />
+                            <span className="text-xs font-medium text-muted-foreground">
+                              AI Preview - Edit before applying
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => copyToClipboard(editedAiResponse)}
+                              title="Copy to clipboard"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="h-6 px-2 text-xs"
+                              onClick={applyAiSuggestion}
+                            >
+                              <Check className="h-3 w-3 mr-1" />
+                              Apply
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Editable AI response */}
+                        <div className="relative">
+                          <RichTextEditor
+                            value={editedAiResponse}
+                            onChange={setEditedAiResponse}
+                            className="min-h-[150px] p-3 text-sm border rounded bg-background/50 w-full resize-y"
+                            minHeight="150px"
+                          />
+                        </div>
+
+                        {/* HTML Preview */}
+                        <div className="mt-3 border-t pt-3">
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <span className="text-xs font-medium text-muted-foreground">
+                              Formatted Preview
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2 text-xs"
+                              onClick={applyAiSuggestion}
+                            >
+                              <Check className="h-3 w-3 mr-1" />
+                              Apply to Note
+                            </Button>
+                          </div>
+                          <div
+                            className="prose prose-sm max-w-none dark:prose-invert overflow-auto p-3 rounded bg-background/50 border"
+                            dangerouslySetInnerHTML={{
+                              __html: editedAiResponse,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Sidebar */}
-          <AnimatePresence>
-            {(sidebarVisible || window.innerWidth >= 1024) && (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: "100%", opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className={cn(
-                  "lg:w-80 border-t lg:border-t-0 lg:border-l bg-gradient-to-b from-background/40 to-background/20 backdrop-blur-sm p-4 sm:p-6 overflow-y-auto",
-                  !sidebarVisible && "lg:block hidden",
-                )}
-              >
-                <div className="space-y-6">
+          {/* Sidebar - Improved organization */}
+          {(sidebarVisible || window.innerWidth >= 1024) && (
+            <div
+              className={cn(
+                "lg:w-80 border-t lg:border-t-0 lg:border-l bg-gradient-to-b from-background/40 to-background/20 p-4 overflow-y-auto",
+                !sidebarVisible && "lg:block hidden",
+              )}
+              style={{ animation: "fadeIn 0.3s ease-out" }}
+            >
+              <div className="space-y-4">
+                {/* Main metadata section */}
+                <div className="space-y-4 pb-4 border-b">
                   {/* Category */}
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">
+                    <Label className="text-sm font-medium mb-1.5 block">
                       Category
                     </Label>
                     <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-8">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -866,7 +816,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
 
                   {/* Tags */}
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">
+                    <Label className="text-sm font-medium mb-1.5 block">
                       Tags
                     </Label>
                     <div className="space-y-2">
@@ -881,27 +831,27 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                               handleAddTag();
                             }
                           }}
-                          className="flex-1"
+                          className="flex-1 h-8"
                         />
                         <Button
                           size="sm"
                           onClick={handleAddTag}
-                          className="bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200"
+                          className="bg-blue-500 hover:bg-blue-600 text-white h-8 w-8 p-0"
                         >
-                          <Tag className="w-4 h-4" />
+                          <Tag className="w-3.5 h-3.5" />
                         </Button>
                       </div>
                       {tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
                           {tags.map((tag) => (
                             <Badge
                               key={tag}
                               variant="secondary"
-                              className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 px-3 py-1"
+                              className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground px-2 py-0.5 text-xs"
                               onClick={() => handleRemoveTag(tag)}
                             >
                               #{tag}
-                              <X className="w-3 h-3 ml-1" />
+                              <X className="w-2.5 h-2.5 ml-1" />
                             </Badge>
                           ))}
                         </div>
@@ -911,15 +861,15 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
 
                   {/* Color */}
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">
+                    <Label className="text-sm font-medium mb-1.5 block">
                       Color
                     </Label>
-                    <div className="grid grid-cols-5 gap-3">
+                    <div className="grid grid-cols-6 gap-2">
                       {NOTE_COLORS.map((noteColor) => (
                         <button
                           key={noteColor}
                           className={cn(
-                            "w-10 h-10 rounded-full border-2 transition-all duration-200 shadow-sm hover:shadow-md",
+                            "w-8 h-8 rounded-full border-2 shadow-sm hover:shadow-md",
                             color === noteColor
                               ? "border-primary scale-110 ring-2 ring-primary/30"
                               : "border-border hover:scale-105 hover:border-primary/50",
@@ -934,12 +884,12 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                   {/* Templates */}
                   {!isEditing && (
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">
+                      <Label className="text-sm font-medium mb-1.5 block">
                         Templates
                       </Label>
                       {templatesLoading ? (
                         <div className="animate-pulse">
-                          <div className="h-10 bg-muted rounded"></div>
+                          <div className="h-8 bg-muted rounded"></div>
                         </div>
                       ) : templates.length > 0 ? (
                         <Select
@@ -950,14 +900,14 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                             if (template) handleTemplateSelect(template);
                           }}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="h-8">
                             <SelectValue placeholder="Choose a template" />
                           </SelectTrigger>
                           <SelectContent>
                             {templates.map((template) => (
                               <SelectItem key={template.id} value={template.id}>
                                 <div className="flex items-center gap-2">
-                                  <FileText className="w-4 h-4" />
+                                  <FileText className="w-3.5 h-3.5" />
                                   {template.title}
                                 </div>
                               </SelectItem>
@@ -965,23 +915,26 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                           </SelectContent>
                         </Select>
                       ) : (
-                        <p className="text-sm text-muted-foreground p-2 border rounded">
+                        <p className="text-xs text-muted-foreground p-2 border rounded">
                           No templates available
                         </p>
                       )}
                     </div>
                   )}
+                </div>
 
+                {/* Organization section */}
+                <div className="space-y-4 pb-4 border-b">
                   {/* Priority */}
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">
+                    <Label className="text-sm font-medium mb-1.5 block">
                       Priority
                     </Label>
                     <Select
                       value={priority}
                       onValueChange={(value: any) => setPriority(value)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-8">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -990,7 +943,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                             <div className="flex items-center gap-2">
                               <AlertCircle
                                 className={cn(
-                                  "w-4 h-4",
+                                  "w-3.5 h-3.5",
                                   p === "high"
                                     ? "text-red-500"
                                     : p === "medium"
@@ -1008,14 +961,14 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
 
                   {/* Status */}
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">
+                    <Label className="text-sm font-medium mb-1.5 block">
                       Status
                     </Label>
                     <Select
                       value={status}
                       onValueChange={(value: any) => setStatus(value)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-8">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1028,70 +981,9 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                     </Select>
                   </div>
 
-                  {/* Location */}
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">
-                      Location
-                    </Label>
-                    <div className="flex gap-2">
-                      <MapPin className="w-4 h-4 mt-2 text-muted-foreground" />
-                      <Input
-                        placeholder="Add location..."
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Mood */}
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">
-                      Mood
-                    </Label>
-                    <Select value={mood} onValueChange={setMood}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select mood" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No mood</SelectItem>
-                        {NOTE_MOODS.map((m) => (
-                          <SelectItem key={m} value={m}>
-                            <div className="flex items-center gap-2">
-                              <Smile className="w-4 h-4" />
-                              {m.charAt(0).toUpperCase() + m.slice(1)}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Weather */}
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">
-                      Weather
-                    </Label>
-                    <Select value={weather} onValueChange={setWeather}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select weather" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No weather</SelectItem>
-                        {NOTE_WEATHER.map((w) => (
-                          <SelectItem key={w} value={w}>
-                            <div className="flex items-center gap-2">
-                              <Cloud className="w-4 h-4" />
-                              {w.charAt(0).toUpperCase() + w.slice(1)}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
                   {/* Reminder */}
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">
+                    <Label className="text-sm font-medium mb-1.5 block">
                       Reminder
                     </Label>
                     <Popover>
@@ -1099,11 +991,11 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal",
+                            "w-full justify-start text-left font-normal h-8 text-sm",
                             !reminderDate && "text-muted-foreground",
                           )}
                         >
-                          <Calendar className="mr-2 h-4 w-4" />
+                          <Calendar className="mr-2 h-3.5 w-3.5" />
                           {reminderDate
                             ? format(reminderDate, "PPP")
                             : "Set reminder"}
@@ -1118,12 +1010,12 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                           initialFocus
                         />
                         {reminderDate && (
-                          <div className="p-3 border-t">
+                          <div className="p-2 border-t">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => setReminderDate(undefined)}
-                              className="w-full"
+                              className="w-full h-7 text-xs"
                             >
                               Clear reminder
                             </Button>
@@ -1132,37 +1024,102 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                       </PopoverContent>
                     </Popover>
                   </div>
+                </div>
 
-                  {/* Quick Actions */}
-                  <div className="pt-4 border-t border-border/50">
-                    <div className="text-xs font-medium text-muted-foreground mb-3">
-                      Quick Actions
+                {/* Context section */}
+                <div className="space-y-4 pb-4 border-b">
+                  {/* Location */}
+                  <div>
+                    <Label className="text-sm font-medium mb-1.5 block">
+                      Location
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                      <Input
+                        placeholder="Add location..."
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        className="h-8"
+                      />
                     </div>
-                    <div className="text-xs text-muted-foreground space-y-2">
-                      <div className="flex items-center gap-2 p-2 rounded-md bg-muted/30">
-                        <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">
-                          ⌘
-                        </kbd>
-                        <span>+</span>
-                        <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">
-                          Enter
-                        </kbd>
-                        <span className="ml-2">Save note</span>
-                      </div>
-                      <div className="flex items-center gap-2 p-2 rounded-md bg-muted/30">
-                        <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">
-                          Esc
-                        </kbd>
-                        <span className="ml-2">Close editor</span>
-                      </div>
+                  </div>
+
+                  {/* Mood */}
+                  <div>
+                    <Label className="text-sm font-medium mb-1.5 block">
+                      Mood
+                    </Label>
+                    <Select value={mood} onValueChange={setMood}>
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder="Select mood" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No mood</SelectItem>
+                        {NOTE_MOODS.map((m) => (
+                          <SelectItem key={m} value={m}>
+                            <div className="flex items-center gap-2">
+                              <Smile className="w-3.5 h-3.5" />
+                              {m.charAt(0).toUpperCase() + m.slice(1)}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Weather */}
+                  <div>
+                    <Label className="text-sm font-medium mb-1.5 block">
+                      Weather
+                    </Label>
+                    <Select value={weather} onValueChange={setWeather}>
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder="Select weather" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No weather</SelectItem>
+                        {NOTE_WEATHER.map((w) => (
+                          <SelectItem key={w} value={w}>
+                            <div className="flex items-center gap-2">
+                              <Cloud className="w-3.5 h-3.5" />
+                              {w.charAt(0).toUpperCase() + w.slice(1)}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div>
+                  <div className="text-xs font-medium text-muted-foreground mb-2">
+                    Quick Actions
+                  </div>
+                  <div className="text-xs text-muted-foreground space-y-1.5">
+                    <div className="flex items-center gap-1.5 p-1.5 rounded-md bg-muted/30">
+                      <kbd className="px-1.5 py-0.5 bg-background rounded text-xs font-mono">
+                        ⌘
+                      </kbd>
+                      <span>+</span>
+                      <kbd className="px-1.5 py-0.5 bg-background rounded text-xs font-mono">
+                        Enter
+                      </kbd>
+                      <span className="ml-1.5">Save note</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 p-1.5 rounded-md bg-muted/30">
+                      <kbd className="px-1.5 py-0.5 bg-background rounded text-xs font-mono">
+                        Esc
+                      </kbd>
+                      <span className="ml-1.5">Close editor</span>
                     </div>
                   </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </div>
+          )}
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

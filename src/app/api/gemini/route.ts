@@ -9,143 +9,53 @@ const MAX_OUTPUT_TOKENS = 1536;
 
 // Helper function to convert markdown to HTML
 const markdownToHtml = (text: string): string => {
-  return text
-    // Headers
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    
-    // Bold and italic
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    
-    // Lists
-    .replace(/^\s*[-*+]\s+(.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.+<\/li>\n)+/g, '<ul>// Helper function to convert markdown to HTML
-const markdownToHtml = (text: string): string => {
-  return text
-    // Headers
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    .replace(/^## (.+)$/gm, '<h2>$2</h2>')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    
-    // Bold and italic
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    
-    // Lists
-    .replace(/^\s*[-*+]\s+(.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.+<\/li>\n)+/g, '<ul>// Helper function to clean AI response
-const cleanAIResponse = (text: string): string => {
-  return text
-    .replace(/\*\*/g, "") // Remove bold markdown
-    .replace(/\*/g, "") // Remove italic markdown
-    .replace(/#{1,6}\s/g, "") // Remove headers
-    .replace(/```[\s\S]*?```/g, (match) => {
-      // Keep code blocks but remove markdown
-      return match.replace(/```\w*\n?/g, "").replace(/```/g, "");
-    })
-    .replace(/\n{3,}/g, "\n\n") // Reduce excessive line breaks
-    .replace(/\s+\n/g, "\n") // Remove spaces before line breaks
-    .replace(/\n\s+/g, "\n") // Remove spaces after line breaks
-    .replace(/\s{2,}/g, " ") // Replace multiple spaces with a single space
-    .trim();
-};</ul>')
-    .replace(/^\s*\d+\.\s+(.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>\d+\..+<\/li>\n)+/g, '<ol>// Helper function to clean AI response
-const cleanAIResponse = (text: string): string => {
-  return text
-    .replace(/\*\*/g, "") // Remove bold markdown
-    .replace(/\*/g, "") // Remove italic markdown
-    .replace(/#{1,6}\s/g, "") // Remove headers
-    .replace(/```[\s\S]*?```/g, (match) => {
-      // Keep code blocks but remove markdown
-      return match.replace(/```\w*\n?/g, "").replace(/```/g, "");
-    })
-    .replace(/\n{3,}/g, "\n\n") // Reduce excessive line breaks
-    .replace(/\s+\n/g, "\n") // Remove spaces before line breaks
-    .replace(/\n\s+/g, "\n") // Remove spaces after line breaks
-    .replace(/\s{2,}/g, " ") // Replace multiple spaces with a single space
-    .trim();
-};</ol>')</ul>')
-    .replace(/^\s*\d+\.\s+(.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>\d+\..+<\/li>\n)+/g, '<ol>// Helper function to convert markdown to HTML
-const markdownToHtml = (text: string): string => {
-  return text
-    // Headers
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    .replace(/^## (.+)$/gm, '<h2>$2</h2>')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    
-    // Bold and italic
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    
-    // Lists
-    .replace(/^\s*[-*+]\s+(.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.+<\/li>\n)+/g, '<ul>// Helper function to clean AI response
-const cleanAIResponse = (text: string): string => {
-  return text
-    .replace(/\*\*/g, "") // Remove bold markdown
-    .replace(/\*/g, "") // Remove italic markdown
-    .replace(/#{1,6}\s/g, "") // Remove headers
-    .replace(/```[\s\S]*?```/g, (match) => {
-      // Keep code blocks but remove markdown
-      return match.replace(/```\w*\n?/g, "").replace(/```/g, "");
-    })
-    .replace(/\n{3,}/g, "\n\n") // Reduce excessive line breaks
-    .replace(/\s+\n/g, "\n") // Remove spaces before line breaks
-    .replace(/\n\s+/g, "\n") // Remove spaces after line breaks
-    .replace(/\s{2,}/g, " ") // Replace multiple spaces with a single space
-    .trim();
-};</ul>')
-    .replace(/^\s*\d+\.\s+(.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>\d+\..+<\/li>\n)+/g, '<ol>// Helper function to clean AI response
-const cleanAIResponse = (text: string): string => {
-  return text
-    .replace(/\*\*/g, "") // Remove bold markdown
-    .replace(/\*/g, "") // Remove italic markdown
-    .replace(/#{1,6}\s/g, "") // Remove headers
-    .replace(/```[\s\S]*?```/g, (match) => {
-      // Keep code blocks but remove markdown
-      return match.replace(/```\w*\n?/g, "").replace(/```/g, "");
-    })
-    .replace(/\n{3,}/g, "\n\n") // Reduce excessive line breaks
-    .replace(/\s+\n/g, "\n") // Remove spaces before line breaks
-    .replace(/\n\s+/g, "\n") // Remove spaces after line breaks
-    .replace(/\s{2,}/g, " ") // Replace multiple spaces with a single space
-    .trim();
-};</ol>')</ol>')
-    
-    // Code blocks
-    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    
-    // Blockquotes
-    .replace(/^>\s+(.+)$/gm, '<blockquote>$1</blockquote>')
-    
-    // Links
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
-    
-    // Line breaks
-    .replace(/\n{3,}/g, '<br><br>') // Reduce excessive line breaks
-    .replace(/\n/g, '<br>') // Convert remaining line breaks
-    
-    .trim();
+  return (
+    text
+      // Headers
+      .replace(/^# (.+)$/gm, "<h1>$1</h1>")
+      .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+      .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+
+      // Bold and italic
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+
+      // Lists
+      .replace(/^\s*[-*+]\s+(.+)$/gm, "<li>$1</li>")
+      .replace(/(<li>.+<\/li>\n)+/g, "<ul>$&</ul>")
+      .replace(/^\s*\d+\.\s+(.+)$/gm, "<li>$1</li>")
+      .replace(/(<li>\d+\..+<\/li>\n)+/g, "<ol>$&</ol>")
+
+      // Code blocks
+      .replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>")
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+
+      // Blockquotes
+      .replace(/^>\s+(.+)$/gm, "<blockquote>$1</blockquote>")
+
+      // Links
+      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
+
+      // Line breaks
+      .replace(/\n{3,}/g, "<br><br>") // Reduce excessive line breaks
+      .replace(/\n/g, "<br>") // Convert remaining line breaks
+
+      .trim()
+  );
 };
 
 // Helper function to clean AI response and convert to HTML
 const cleanAIResponse = (text: string): string => {
   // First check if the response already contains HTML tags
   const hasHtmlTags = /<[a-z][\s\S]*>/i.test(text);
-  
+
   if (hasHtmlTags) {
     // If it already has HTML, just clean up excessive whitespace
     return text
-      .replace(/\n{3,}/g, '\n\n') // Reduce excessive line breaks
-      .replace(/\s+\n/g, '\n') // Remove spaces before line breaks
-      .replace(/\n\s+/g, '\n') // Remove spaces after line breaks
-      .replace(/\s{2,}/g, ' ') // Replace multiple spaces with a single space
+      .replace(/\n{3,}/g, "\n\n") // Reduce excessive line breaks
+      .replace(/\s+\n/g, "\n") // Remove spaces before line breaks
+      .replace(/\n\s+/g, "\n") // Remove spaces after line breaks
+      .replace(/\s{2,}/g, " ") // Replace multiple spaces with a single space
       .trim();
   } else {
     // If it's markdown or plain text, convert to HTML
