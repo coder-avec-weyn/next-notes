@@ -25,13 +25,13 @@ import { User } from "@supabase/supabase-js";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
-  const supabase = createClient();
 
   useEffect(() => {
     const getUser = async () => {
-      if (supabase) {
+      const client = createClient();
+      if (client) {
         try {
-          const { data } = await supabase.auth.getUser();
+          const { data } = await client.auth.getUser();
           setUser(data.user);
         } catch (error) {
           console.warn("Failed to get user:", error);
@@ -44,7 +44,7 @@ export default function Home() {
     };
 
     getUser();
-  }, [supabase]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">

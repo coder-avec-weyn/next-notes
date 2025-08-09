@@ -449,9 +449,9 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
               title={sidebarVisible ? "Hide sidebar" : "Show sidebar"}
             >
               {sidebarVisible ? (
-                <ChevronUp className="w-3.5 h-3.5" />
+                <ChevronDown className="w-4 h-4" />
               ) : (
-                <ChevronDown className="w-3.5 h-3.5" />
+                <ChevronUp className="w-4 h-4" />
               )}
             </Button>
             <Button
@@ -556,7 +556,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                         size="sm"
                         variant={aiMode === "improve" ? "default" : "outline"}
                         onClick={() => setAiMode("improve")}
-                        className="text-xs gap-1 w-full"
+                        className="h-7 text-xs gap-1 w-full px-2"
                       >
                         <Pencil className="h-3 w-3" />
                         Improve
@@ -565,7 +565,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                         size="sm"
                         variant={aiMode === "rewrite" ? "default" : "outline"}
                         onClick={() => setAiMode("rewrite")}
-                        className="text-xs gap-1 w-full"
+                        className="h-7 text-xs gap-1 w-full px-2"
                       >
                         <Wand2 className="h-3 w-3" />
                         Rewrite
@@ -574,7 +574,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                         size="sm"
                         variant={aiMode === "style" ? "default" : "outline"}
                         onClick={() => setAiMode("style")}
-                        className="text-xs gap-1 w-full"
+                        className="h-7 text-xs gap-1 w-full px-2"
                       >
                         <Type className="h-3 w-3" />
                         Style
@@ -583,7 +583,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                         size="sm"
                         variant={aiMode === "custom" ? "default" : "outline"}
                         onClick={() => setAiMode("custom")}
-                        className="text-xs gap-1 w-full"
+                        className="h-7 text-xs gap-1 w-full px-2"
                       >
                         <Sparkles className="h-3 w-3" />
                         Custom
@@ -601,8 +601,10 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                                 aiStyle === style ? "default" : "outline"
                               }
                               className={cn(
-                                "cursor-pointer transition-all text-center py-1",
-                                aiStyle === style ? "bg-primary" : "",
+                                "cursor-pointer transition-all text-center py-1 px-2 text-xs h-6 flex items-center justify-center",
+                                aiStyle === style
+                                  ? "bg-primary text-primary-foreground"
+                                  : "hover:bg-muted",
                               )}
                               onClick={() => setAiStyle(style as any)}
                             >
@@ -621,13 +623,13 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                             placeholder="Enter your custom instruction..."
                             value={customPrompt}
                             onChange={(e) => setCustomPrompt(e.target.value)}
-                            className="text-xs pr-24"
+                            className="text-xs h-8 pr-20"
                           />
                           <div className="absolute right-1 top-1/2 -translate-y-1/2">
                             {customPrompt.trim() && (
                               <Button
                                 size="sm"
-                                className="h-6 text-xs"
+                                className="h-6 text-xs px-2"
                                 onClick={() => {
                                   setAiMode("custom");
                                   handleAiAssist();
@@ -647,7 +649,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                     )}
 
                     {/* Action buttons - Better organized */}
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <Button
                         size="sm"
                         onClick={handleAiAssist}
@@ -656,7 +658,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                           aiLoading ||
                           (aiMode === "custom" && !customPrompt.trim())
                         }
-                        className="text-xs gap-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                        className="h-7 text-xs gap-1 px-3 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                       >
                         {aiLoading ? (
                           <>
@@ -682,7 +684,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                             setEditedAiResponse("");
                             setAiResponseChunks([]);
                           }}
-                          className="text-xs gap-1 text-destructive hover:bg-destructive/10"
+                          className="h-7 text-xs gap-1 px-2 text-destructive hover:bg-destructive/10"
                         >
                           <Trash className="h-3 w-3" />
                           Clear
@@ -724,7 +726,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 px-2 text-xs"
+                              className="h-6 w-6 p-0 text-xs"
                               onClick={() => copyToClipboard(editedAiResponse)}
                               title="Copy to clipboard"
                             >
@@ -784,7 +786,8 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
           </div>
 
           {/* Sidebar - Improved organization */}
-          {(sidebarVisible || window.innerWidth >= 1024) && (
+          {(sidebarVisible ||
+            (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
             <div
               className={cn(
                 "lg:w-80 border-t lg:border-t-0 lg:border-l bg-gradient-to-b from-background/40 to-background/20 p-4 overflow-y-auto",
@@ -836,7 +839,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                         <Button
                           size="sm"
                           onClick={handleAddTag}
-                          className="bg-blue-500 hover:bg-blue-600 text-white h-8 w-8 p-0"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground h-8 w-8 p-0"
                         >
                           <Tag className="w-3.5 h-3.5" />
                         </Button>
@@ -847,7 +850,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                             <Badge
                               key={tag}
                               variant="secondary"
-                              className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground px-2 py-0.5 text-xs"
+                              className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground px-2 py-0.5 text-xs transition-colors"
                               onClick={() => handleRemoveTag(tag)}
                             >
                               #{tag}
@@ -864,12 +867,12 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                     <Label className="text-sm font-medium mb-1.5 block">
                       Color
                     </Label>
-                    <div className="grid grid-cols-6 gap-2">
+                    <div className="grid grid-cols-5 gap-2">
                       {NOTE_COLORS.map((noteColor) => (
                         <button
                           key={noteColor}
                           className={cn(
-                            "w-8 h-8 rounded-full border-2 shadow-sm hover:shadow-md",
+                            "w-7 h-7 rounded-full border-2 shadow-sm hover:shadow-md transition-all duration-200",
                             color === noteColor
                               ? "border-primary scale-110 ring-2 ring-primary/30"
                               : "border-border hover:scale-105 hover:border-primary/50",
