@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Star,
   Pin,
@@ -165,7 +165,23 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
   };
 
   return (
-    <motion.div {...cardHover} whileTap={{ scale: 0.98 }}>
+    <motion.div
+      {...cardHover}
+      whileTap={{ scale: 0.98 }}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      layout
+      role="article"
+      aria-label={note.title || "Untitled Note"}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onEdit();
+        }
+      }}
+    >
       <Card
         className={cn(
           "cursor-pointer transition-all duration-200 hover:shadow-md dark:hover:shadow-lg relative overflow-hidden border border-border dark:border-border",
@@ -289,23 +305,32 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
                       </DropdownMenuItem>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Note</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete &quot;
-                          {note.title || "Untitled Note"}&quot;? This action
-                          cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDelete}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Note</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete &quot;
+                            {note.title || "Untitled Note"}&quot;? This action
+                            cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <motion.div {...buttonPress}>
+                            <AlertDialogAction
+                              onClick={handleDelete}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </motion.div>
+                        </AlertDialogFooter>
+                      </motion.div>
                     </AlertDialogContent>
                   </AlertDialog>
                 </DropdownMenuContent>

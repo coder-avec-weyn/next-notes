@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Note } from "@/types/note";
 import { NoteItem } from "@/components/note-item";
 import { staggerContainer, staggerItem } from "@/utils/animations";
@@ -30,10 +30,12 @@ export function NotesList({
         variants={staggerContainer}
         initial="initial"
         animate="animate"
+        role="status"
+        aria-label="Loading notes"
       >
         {Array.from({ length: viewMode === "grid" ? 8 : 4 }).map((_, i) => (
           <motion.div key={i} variants={staggerItem}>
-            <div className="bg-card rounded-lg border p-6">
+            <div className="bg-card rounded-lg border p-6 relative overflow-hidden">
               <div className="animate-pulse space-y-4">
                 <div className="h-4 bg-muted rounded w-3/4"></div>
                 <div className="space-y-2">
@@ -46,6 +48,12 @@ export function NotesList({
                   <div className="h-6 bg-muted rounded w-20"></div>
                 </div>
               </div>
+              <motion.div
+                className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                animate={{ x: ["calc(-100%)", "calc(100%)"] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                style={{ opacity: 0.7 }}
+              />
             </div>
           </motion.div>
         ))}
@@ -84,16 +92,29 @@ export function NotesList({
       variants={staggerContainer}
       initial="initial"
       animate="animate"
+      role="list"
+      aria-label="Notes list"
     >
-      {notes.map((note) => (
-        <motion.div key={note.id} variants={staggerItem}>
-          <NoteItem
-            note={note}
-            viewMode={viewMode}
-            onEdit={() => onEditNote(note.id)}
-          />
-        </motion.div>
-      ))}
+      <AnimatePresence mode="popLayout">
+        {notes.map((note) => (
+          <motion.div
+            key={note.id}
+            variants={staggerItem}
+            layout
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8, height: 0 }}
+            transition={{ duration: 0.3 }}
+            role="listitem"
+          >
+            <NoteItem
+              note={note}
+              viewMode={viewMode}
+              onEdit={() => onEditNote(note.id)}
+            />
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </motion.div>
   );
 }

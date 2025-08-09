@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
   Save,
@@ -57,7 +57,7 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { slideUp, fadeIn } from "@/utils/animations";
+import { slideUp, fadeIn, buttonPress } from "@/utils/animations";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -202,6 +202,9 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="note-editor-title"
     >
       <motion.div
         className="bg-card rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
@@ -211,11 +214,15 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
         exit="exit"
         onClick={(e) => e.stopPropagation()}
         style={{ backgroundColor: color }}
+        role="document"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b bg-background/50 backdrop-blur-sm">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-semibold text-foreground">
+            <h2
+              className="text-xl font-semibold text-foreground"
+              id="note-editor-title"
+            >
               {isEditing ? "Edit Note" : "Create Note"}
             </h2>
             <div className="flex items-center gap-2">
@@ -259,14 +266,39 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="gap-2 bg-green-600 hover:bg-green-700 text-white transition-all duration-200"
-            >
-              <Save className="w-4 h-4" />
-              {isSaving ? "Saving..." : "Save"}
-            </Button>
+            <motion.div {...buttonPress}>
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="gap-2 bg-green-600 hover:bg-green-700 text-white transition-all duration-200"
+              >
+                <AnimatePresence mode="wait">
+                  {isSaving ? (
+                    <motion.div
+                      key="saving"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="flex items-center gap-2"
+                    >
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Saving...
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="save"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="flex items-center gap-2"
+                    >
+                      <Save className="w-4 h-4" />
+                      Save
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Button>
+            </motion.div>
             <Button
               variant="ghost"
               size="sm"

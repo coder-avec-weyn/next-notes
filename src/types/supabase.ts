@@ -462,6 +462,10 @@ export type Database = {
         Args: { user_row: Database["public"]["Tables"]["users"]["Row"] }
         Returns: number
       }
+      exec_sql: {
+        Args: { sql: string }
+        Returns: undefined
+      }
       get_user_public_notes_count: {
         Args: { user_uuid: string }
         Returns: number

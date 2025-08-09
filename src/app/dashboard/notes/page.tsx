@@ -56,8 +56,17 @@ import { fadeInUp, staggerContainer, staggerItem } from "@/utils/animations";
 import { cn } from "@/lib/utils";
 
 export default function NotesPage() {
-  const { notes, loading, notesLoading, fetchNotes, exportNotes } = useNotes();
+  const {
+    notes,
+    loading,
+    notesLoading,
+    notesSyncing,
+    fetchNotes,
+    exportNotes,
+    realtimeStatus,
+  } = useNotes();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedPriority, setSelectedPriority] = useState<string>("all");
@@ -88,8 +97,8 @@ export default function NotesPage() {
   const filteredNotes = useMemo(() => {
     let filtered = notes.filter((note) => {
       // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
+      if (debouncedSearchQuery) {
+        const query = debouncedSearchQuery.toLowerCase();
         if (
           !note.title.toLowerCase().includes(query) &&
           !note.content.toLowerCase().includes(query)
@@ -167,7 +176,7 @@ export default function NotesPage() {
     return filtered;
   }, [
     notes,
-    searchQuery,
+    debouncedSearchQuery,
     selectedCategory,
     selectedTags,
     selectedPriority,
@@ -266,12 +275,30 @@ export default function NotesPage() {
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
-              <Badge
-                variant="secondary"
-                className="text-foreground bg-secondary dark:bg-secondary dark:text-secondary-foreground"
-              >
-                {filteredNotes.length} notes
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="secondary"
+                  className="text-foreground bg-secondary dark:bg-secondary dark:text-secondary-foreground"
+                >
+                  {filteredNotes.length} notes
+                </Badge>
+                {notesSyncing && (
+                  <Badge
+                    variant="outline"
+                    className="animate-pulse bg-blue-100 dark:bg-blue-900 text-xs"
+                  >
+                    Syncing...
+                  </Badge>
+                )}
+                {realtimeStatus === "connected" && (
+                  <Badge
+                    variant="outline"
+                    className="bg-green-100 dark:bg-green-900 text-xs"
+                  >
+                    Realtime
+                  </Badge>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -341,7 +368,14 @@ export default function NotesPage() {
                 <Input
                   placeholder="Search notes..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    // Debounce search input
+                    const handler = setTimeout(() => {
+                      setDebouncedSearchQuery(e.target.value);
+                    }, 300);
+                    return () => clearTimeout(handler);
+                  }}
                   className="pl-10 bg-background dark:bg-background text-foreground dark:text-foreground border-border dark:border-border"
                 />
               </div>
@@ -570,15 +604,46 @@ export default function NotesPage() {
       <div className="container mx-auto px-4 py-8">
         {activeTab === "notes" ? (
           <div className="relative">
-            {notesLoading && notes.length > 0 && (
-              <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
-                <div className="bg-card p-4 rounded-lg shadow-lg border">
-                  <LoadingSpinner size="md" />
-                  <p className="mt-2 text-sm text-muted-foreground text-center">
-                    Updating notes...
-                  </p>
-                </div>
-              </div>
+            <AnimatePresence>
+              {notesLoading && notes.length > 0 && (
+                <motion.div
+                  className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center"
+                  initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                  animate={{ opacity: 1, backdropFilter: "blur(4px)" }}
+                  exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                  transition={{ duration: 0.3 }}
+                  role="status"
+                  aria-label="Syncing notes"
+                >
+                  <motion.div
+                    className="bg-card p-4 rounded-lg shadow-lg border"
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 10, opacity: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <LoadingSpinner size="md" />
+                    <p className="mt-2 text-sm text-muted-foreground text-center">
+                      Updating notes...
+                    </p>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {notesSyncing && (
+              <motion.div
+                className="fixed bottom-4 right-4 bg-card p-3 rounded-lg shadow-lg border flex items-center gap-2 z-20"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.3 }}
+                role="status"
+                aria-live="polite"
+              >
+                <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+                <p className="text-sm text-foreground">Syncing changes...</p>
+              </motion.div>
             )}
             <NotesList
               notes={filteredNotes}
@@ -593,7 +658,7 @@ export default function NotesPage() {
       </div>
 
       {/* Note Editor Modal */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isEditorOpen && (
           <NoteEditor noteId={selectedNote} onClose={handleCloseEditor} />
         )}
