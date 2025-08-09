@@ -166,11 +166,11 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
 
   return (
     <motion.div
-      {...cardHover}
-      whileTap={{ scale: 0.98 }}
-      initial="initial"
-      animate="animate"
-      exit="exit"
+      style={{ touchAction: "manipulation" }}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9, height: 0 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       layout
       role="article"
       aria-label={note.title || "Untitled Note"}
@@ -217,7 +217,7 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-8 w-8 p-0 hover:bg-background/50 dark:hover:bg-background/50 transition-colors duration-200",
+                    "h-9 w-9 sm:h-8 sm:w-8 p-0 hover:bg-background/50 dark:hover:bg-background/50 transition-colors duration-200 touch-area",
                     note.is_favorite && "text-yellow-500",
                   )}
                   onClick={handleToggleFavorite}
@@ -237,7 +237,7 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 hover:bg-background/50 dark:hover:bg-background/50 transition-colors duration-200"
+                    className="h-9 w-9 sm:h-8 sm:w-8 p-0 hover:bg-background/50 dark:hover:bg-background/50 transition-colors duration-200 touch-area"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <MoreVertical className="w-4 h-4" />

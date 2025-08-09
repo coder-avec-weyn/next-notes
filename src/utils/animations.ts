@@ -11,11 +11,34 @@ const getReducedMotion = (normalDuration: number) => {
     : { duration: normalDuration };
 };
 
+// Helper to create responsive animation variants
+const createResponsiveVariants = (baseVariants: any) => {
+  return {
+    ...baseVariants,
+    transition: {
+      ...baseVariants.transition,
+      // Add responsive timing based on screen size
+      duration:
+        typeof window !== "undefined" && window.innerWidth < 768
+          ? getReducedMotion(baseVariants.transition?.duration || 0.3)
+              .duration * 0.8
+          : getReducedMotion(baseVariants.transition?.duration || 0.3).duration,
+    },
+  };
+};
+
 export const fadeInUp = {
   initial: { opacity: 0, y: prefersReducedMotion ? 0 : 20 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: prefersReducedMotion ? 0 : -20 },
   transition: { duration: getReducedMotion(0.3).duration, ease: "easeOut" },
+};
+
+export const pageTransition = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: getReducedMotion(0.4).duration, ease: "easeInOut" },
 };
 
 export const fadeIn = {
@@ -113,6 +136,7 @@ export const cardHover = {
         boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
         transition: { duration: 0.2 },
       },
+  whileTap: prefersReducedMotion ? {} : { scale: 0.98 },
 };
 
 export const buttonPress = {
@@ -141,6 +165,27 @@ export const toastEnter = {
     scale: prefersReducedMotion ? 1 : 0.9,
   },
   transition: { duration: getReducedMotion(0.3).duration, ease: "easeOut" },
+};
+
+export const themeToggleAnimation = {
+  initial: { rotate: -20, scale: 0.8, opacity: 0 },
+  animate: { rotate: 0, scale: 1, opacity: 1 },
+  exit: { rotate: 20, scale: 0.8, opacity: 0 },
+  transition: { type: "spring", stiffness: 300, damping: 15 },
+};
+
+export const noteItemAnimation = {
+  initial: { opacity: 0, scale: 0.9 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.9, height: 0 },
+  transition: { duration: getReducedMotion(0.3).duration, ease: "easeInOut" },
+};
+
+export const modalAnimation = {
+  initial: { opacity: 0, scale: 0.95 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.95 },
+  transition: { duration: getReducedMotion(0.2).duration, ease: "easeOut" },
 };
 
 export const syncingOverlay = {

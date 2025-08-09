@@ -25,6 +25,8 @@ const Card = React.forwardRef<
       {...props}
       {...(prefersReducedMotion ? {} : cardHover)}
       transition={{ duration: 0.2 }}
+      initial={{ opacity: 0.9, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
     />
   );
 });

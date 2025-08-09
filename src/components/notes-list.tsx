@@ -9,27 +9,26 @@ import { FileText } from "lucide-react";
 interface NotesListProps {
   notes: Note[];
   viewMode: "grid" | "list";
-  onEditNote: (noteId: string) => void;
   isLoading?: boolean;
+  onEditNote: (noteId: string) => void;
 }
 
 export function NotesList({
   notes,
   viewMode,
-  onEditNote,
   isLoading = false,
+  onEditNote,
 }: NotesListProps) {
   if (isLoading) {
     return (
       <motion.div
         className={`grid gap-4 ${
           viewMode === "grid"
-            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             : "grid-cols-1 max-w-4xl mx-auto"
         }`}
-        variants={staggerContainer}
-        initial="initial"
-        animate="animate"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         role="status"
         aria-label="Loading notes"
       >
@@ -86,12 +85,11 @@ export function NotesList({
     <motion.div
       className={`grid gap-4 ${
         viewMode === "grid"
-          ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           : "grid-cols-1 max-w-4xl mx-auto"
       }`}
-      variants={staggerContainer}
-      initial="initial"
-      animate="animate"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       role="list"
       aria-label="Notes list"
     >

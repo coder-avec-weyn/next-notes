@@ -198,26 +198,27 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
   return (
     <motion.div
       className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+      animate={{ opacity: 1, backdropFilter: "blur(4px)" }}
+      exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="note-editor-title"
+      transition={{ duration: 0.3 }}
     >
       <motion.div
         className="bg-card rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
-        variants={slideUp}
-        initial="initial"
-        animate="animate"
-        exit="exit"
+        initial={{ opacity: 0, y: 100 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 100 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         onClick={(e) => e.stopPropagation()}
         style={{ backgroundColor: color }}
         role="document"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b bg-background/50 backdrop-blur-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-b bg-background/50 backdrop-blur-sm gap-3 sm:gap-0">
           <div className="flex items-center gap-4">
             <h2
               className="text-xl font-semibold text-foreground"
@@ -225,42 +226,42 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
             >
               {isEditing ? "Edit Note" : "Create Note"}
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Button
                 variant={isFavorite ? "default" : "outline"}
                 size="sm"
                 onClick={() => setIsFavorite(!isFavorite)}
                 className={cn(
-                  "gap-2 transition-all duration-200",
+                  "gap-1 transition-all duration-200 h-9 px-3 sm:h-8 sm:px-3",
                   isFavorite && "bg-yellow-500 hover:bg-yellow-600 text-white",
                 )}
               >
                 <Star className={cn("w-4 h-4", isFavorite && "fill-current")} />
-                Favorite
+                <span className="sm:inline">Favorite</span>
               </Button>
               <Button
                 variant={isPinned ? "default" : "outline"}
                 size="sm"
                 onClick={() => setIsPinned(!isPinned)}
                 className={cn(
-                  "gap-2 transition-all duration-200",
+                  "gap-1 transition-all duration-200 h-9 px-3 sm:h-8 sm:px-3",
                   isPinned && "bg-blue-500 hover:bg-blue-600 text-white",
                 )}
               >
                 <Pin className={cn("w-4 h-4", isPinned && "fill-current")} />
-                Pin
+                <span className="sm:inline">Pin</span>
               </Button>
               <Button
                 variant={isPublic ? "default" : "outline"}
                 size="sm"
                 onClick={() => setIsPublic(!isPublic)}
                 className={cn(
-                  "gap-2 transition-all duration-200",
+                  "gap-1 transition-all duration-200 h-9 px-3 sm:h-8 sm:px-3",
                   isPublic && "bg-green-500 hover:bg-green-600 text-white",
                 )}
               >
                 <Globe className={cn("w-4 h-4", isPublic && "fill-current")} />
-                Public
+                <span className="sm:inline">Public</span>
               </Button>
             </div>
           </div>
@@ -311,9 +312,9 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
         </div>
 
         {/* Content */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
           {/* Main Editor */}
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
             <div className="space-y-4">
               {/* Title */}
               <div>
@@ -342,7 +343,7 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
           </div>
 
           {/* Sidebar */}
-          <div className="w-80 border-l bg-gradient-to-b from-background/40 to-background/20 backdrop-blur-sm p-6 overflow-y-auto">
+          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l bg-gradient-to-b from-background/40 to-background/20 backdrop-blur-sm p-4 sm:p-6 overflow-y-auto">
             <div className="space-y-6">
               {/* Category */}
               <div>

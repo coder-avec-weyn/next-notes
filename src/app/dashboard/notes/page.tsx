@@ -2,15 +2,7 @@
 
 import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
-
-const motion = dynamic(
-  () => import("framer-motion").then((mod) => mod.motion),
-  { ssr: false },
-);
-const AnimatePresence = dynamic(
-  () => import("framer-motion").then((mod) => mod.AnimatePresence),
-  { ssr: false },
-);
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Search,
@@ -49,7 +41,7 @@ import { NOTE_COLORS } from "@/types/note";
 
 import { NOTE_CATEGORIES, NOTE_PRIORITIES, NOTE_STATUSES } from "@/types/note";
 import { LoadingSpinner, LoadingCard } from "@/components/ui/loading-spinner";
-import { NotesList } from "@/components/notes-list";
+import { NotesListWrapper } from "@/components/notes-list-wrapper";
 import { NoteEditor } from "@/components/note-editor";
 import { NotesAnalytics } from "@/components/notes-analytics";
 import { fadeInUp, staggerContainer, staggerItem } from "@/utils/animations";
@@ -80,8 +72,7 @@ export default function NotesPage() {
   const [showFavorites, setShowFavorites] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [showPinned, setShowPinned] = useState(false);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<string | null>(null);
+  // Note editor state is now handled in NotesListWrapper
   const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
 
   // Get all unique tags from notes
@@ -189,19 +180,14 @@ export default function NotesPage() {
   ]);
 
   const handleCreateNote = () => {
-    setSelectedNote(null);
+    // Open the note editor with no selected note to create a new one
     setIsEditorOpen(true);
-  };
-
-  const handleEditNote = (noteId: string) => {
-    setSelectedNote(noteId);
-    setIsEditorOpen(true);
-  };
-
-  const handleCloseEditor = () => {
-    setIsEditorOpen(false);
     setSelectedNote(null);
   };
+
+  // State for note editor
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<string | null>(null);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -237,7 +223,7 @@ export default function NotesPage() {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <LoadingCard key={i} />
             ))}
@@ -248,11 +234,17 @@ export default function NotesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div
+      className="min-h-screen bg-background"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 touch-spacing">
             <div className="flex items-center gap-4">
               <Tabs
                 value={activeTab}
@@ -304,7 +296,10 @@ export default function NotesPage() {
             <div className="flex items-center gap-2">
               {activeTab === "notes" && (
                 <>
-                  <Button onClick={handleCreateNote} className="gap-2">
+                  <Button
+                    onClick={handleCreateNote}
+                    className="gap-2 touch-area"
+                  >
                     <Plus className="w-4 h-4" />
                     New Note
                   </Button>
@@ -361,7 +356,7 @@ export default function NotesPage() {
       {activeTab === "notes" && (
         <div className="border-b bg-card/30 backdrop-blur-sm">
           <div className="container mx-auto px-4 py-4">
-            <div className="flex flex-col lg:flex-row gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Search */}
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -645,11 +640,14 @@ export default function NotesPage() {
                 <p className="text-sm text-foreground">Syncing changes...</p>
               </motion.div>
             )}
-            <NotesList
+            <NotesListWrapper
               notes={filteredNotes}
               viewMode={viewMode}
-              onEditNote={handleEditNote}
               isLoading={notesLoading && notes.length === 0}
+              onEditNote={(noteId) => {
+                setSelectedNote(noteId);
+                setIsEditorOpen(true);
+              }}
             />
           </div>
         ) : (
@@ -658,11 +656,12 @@ export default function NotesPage() {
       </div>
 
       {/* Note Editor Modal */}
-      <AnimatePresence mode="wait">
-        {isEditorOpen && (
-          <NoteEditor noteId={selectedNote} onClose={handleCloseEditor} />
-        )}
-      </AnimatePresence>
-    </div>
+      {isEditorOpen && (
+        <NoteEditor
+          noteId={selectedNote}
+          onClose={() => setIsEditorOpen(false)}
+        />
+      )}
+    </motion.div>
   );
 }

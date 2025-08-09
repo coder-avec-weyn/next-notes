@@ -11,6 +11,8 @@ import {
 import { Laptop, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { themeToggleAnimation } from "@/utils/animations";
 
 const ThemeSwitcher = () => {
   const [mounted, setMounted] = useState(false);
@@ -31,25 +33,21 @@ const ThemeSwitcher = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size={"sm"}>
-          {theme === "light" ? (
-            <Sun
-              key="light"
-              size={ICON_SIZE}
-              className={"text-muted-foreground"}
-            />
-          ) : theme === "dark" ? (
-            <Moon
-              key="dark"
-              size={ICON_SIZE}
-              className={"text-muted-foreground"}
-            />
-          ) : (
-            <Laptop
-              key="system"
-              size={ICON_SIZE}
-              className={"text-muted-foreground"}
-            />
-          )}
+          <AnimatePresence mode="wait">
+            {theme === "light" ? (
+              <motion.div key="light" {...themeToggleAnimation}>
+                <Sun size={ICON_SIZE} className={"text-muted-foreground"} />
+              </motion.div>
+            ) : theme === "dark" ? (
+              <motion.div key="dark" {...themeToggleAnimation}>
+                <Moon size={ICON_SIZE} className={"text-muted-foreground"} />
+              </motion.div>
+            ) : (
+              <motion.div key="system" {...themeToggleAnimation}>
+                <Laptop size={ICON_SIZE} className={"text-muted-foreground"} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-content" align="start">
