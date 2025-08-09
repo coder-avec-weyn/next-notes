@@ -2,7 +2,15 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Sparkles, TrendingUp, Lightbulb, X } from "lucide-react";
+import {
+  Send,
+  Sparkles,
+  TrendingUp,
+  Lightbulb,
+  X,
+  Minimize2,
+  Maximize2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -20,12 +28,14 @@ type ChatbotProps = {
   onClose?: () => void;
   initialPrompt?: string;
   className?: string;
+  isFloating?: boolean;
 };
 
 export function Chatbot({
   onClose,
   initialPrompt,
   className = "",
+  isFloating = false,
 }: ChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState(initialPrompt || "");
@@ -34,6 +44,9 @@ export function Chatbot({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(null);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [pendingChunks, setPendingChunks] = useState<string[]>([]);
+  const [isProcessingChunks, setIsProcessingChunks] = useState(false);
 
   // Get user ID on component mount
   useEffect(() => {
@@ -155,17 +168,37 @@ export function Chatbot({
 
       const data = await response.json();
 
-      const aiMessage = {
-        id: crypto.randomUUID(),
-        role: "assistant" as const,
-        content: data.response,
-        timestamp: new Date(),
-      };
+      // Handle chunked responses
+      if (data.chunks && data.chunks.length > 1) {
+        // Send first chunk immediately
+        const firstMessage = {
+          id: crypto.randomUUID(),
+          role: "assistant" as const,
+          content: data.chunks[0],
+          timestamp: new Date(),
+        };
 
-      setMessages((prev) => [...prev, aiMessage]);
+        setMessages((prev) => [...prev, firstMessage]);
+        if (userId) {
+          saveChatMessage(firstMessage, userId);
+        }
 
-      if (userId) {
-        saveChatMessage(aiMessage, userId);
+        // Queue remaining chunks
+        setPendingChunks(data.chunks.slice(1));
+        setIsProcessingChunks(true);
+      } else {
+        // Single response
+        const aiMessage = {
+          id: crypto.randomUUID(),
+          role: "assistant" as const,
+          content: data.response,
+          timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, aiMessage]);
+        if (userId) {
+          saveChatMessage(aiMessage, userId);
+        }
       }
     } catch (err) {
       console.error("Error fetching from Gemini API:", err);
@@ -177,12 +210,50 @@ export function Chatbot({
 
   const handleQuickAction = (prompt: string) => {
     setInput(prompt);
-    handleSendMessage();
+    setTimeout(() => handleSendMessage(), 100);
   };
+
+  // Process pending chunks with delay
+  useEffect(() => {
+    if (pendingChunks.length > 0 && isProcessingChunks) {
+      const timer = setTimeout(() => {
+        const nextChunk = pendingChunks[0];
+        const remainingChunks = pendingChunks.slice(1);
+
+        const chunkMessage = {
+          id: crypto.randomUUID(),
+          role: "assistant" as const,
+          content: nextChunk,
+          timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, chunkMessage]);
+        if (userId) {
+          saveChatMessage(chunkMessage, userId);
+        }
+
+        setPendingChunks(remainingChunks);
+
+        if (remainingChunks.length === 0) {
+          setIsProcessingChunks(false);
+        }
+      }, 1500); // 1.5 second delay between chunks
+
+      return () => clearTimeout(timer);
+    }
+  }, [pendingChunks, isProcessingChunks, userId]);
 
   return (
     <div
-      className={`flex flex-col bg-background border rounded-lg shadow-lg overflow-hidden ${className}`}
+      className={`flex flex-col bg-background border rounded-lg shadow-lg overflow-hidden transition-all duration-300 ${className} ${isFloating ? "z-50" : ""}`}
+      style={{
+        height: isMinimized ? "60px" : isFloating ? "500px" : "auto",
+        width: isFloating ? "380px" : "auto",
+        maxHeight: isFloating ? "80vh" : "none",
+      }}
+      initial={isFloating ? { opacity: 0, scale: 0.9 } : { opacity: 1 }}
+      animate={isFloating ? { opacity: 1, scale: 1 } : { opacity: 1 }}
+      exit={isFloating ? { opacity: 0, scale: 0.9 } : { opacity: 1 }}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b bg-muted/30">
@@ -190,135 +261,161 @@ export function Chatbot({
           <Sparkles className="h-5 w-5 text-primary" />
           <h3 className="font-medium">AI Assistant</h3>
         </div>
-        {onClose && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-8 w-8 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
+        <div className="flex items-center gap-1">
+          {isFloating && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMinimized(!isMinimized)}
+              className="h-8 w-8 p-0"
+            >
+              {isMinimized ? (
+                <Maximize2 className="h-4 w-4" />
+              ) : (
+                <Minimize2 className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
-      <div
-        className="flex-1 overflow-y-auto p-4 space-y-4"
-        style={{ maxHeight: "400px" }}
-      >
-        <AnimatePresence>
-          {messages.map((message) => (
+      {!isMinimized && (
+        <div
+          className="flex-1 overflow-y-auto p-4 space-y-4"
+          style={{ maxHeight: isFloating ? "300px" : "400px" }}
+        >
+          <AnimatePresence>
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial="initial"
+                animate="animate"
+                variants={
+                  message.role === "user" ? slideInFromRight : slideInFromLeft
+                }
+                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-lg p-3 ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+                >
+                  <p className="whitespace-pre-wrap break-words text-sm">
+                    {message.content}
+                  </p>
+                  <div className="text-xs opacity-70 mt-1">
+                    {message.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {isLoading && (
             <motion.div
-              key={message.id}
+              className="flex justify-start"
               initial="initial"
               animate="animate"
-              variants={
-                message.role === "user" ? slideInFromRight : slideInFromLeft
-              }
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              variants={fadeIn}
             >
-              <div
-                className={`max-w-[80%] rounded-lg p-3 ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
-              >
-                <p className="whitespace-pre-wrap break-words text-sm">
-                  {message.content}
-                </p>
-                <div className="text-xs opacity-70 mt-1">
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
+              <div className="bg-muted rounded-lg p-4 flex items-center space-x-2">
+                <LoadingSpinner size="sm" />
+                <span className="text-sm">Thinking...</span>
               </div>
             </motion.div>
-          ))}
-        </AnimatePresence>
+          )}
 
-        {isLoading && (
-          <motion.div
-            className="flex justify-start"
-            initial="initial"
-            animate="animate"
-            variants={fadeIn}
-          >
-            <div className="bg-muted rounded-lg p-4 flex items-center space-x-2">
-              <LoadingSpinner size="sm" />
-              <span className="text-sm">Thinking...</span>
-            </div>
-          </motion.div>
-        )}
+          {error && (
+            <motion.div
+              className="flex justify-start"
+              initial="initial"
+              animate="animate"
+              variants={fadeIn}
+            >
+              <div className="bg-destructive/10 text-destructive rounded-lg p-3">
+                <p className="text-sm">{error}</p>
+              </div>
+            </motion.div>
+          )}
 
-        {error && (
-          <motion.div
-            className="flex justify-start"
-            initial="initial"
-            animate="animate"
-            variants={fadeIn}
-          >
-            <div className="bg-destructive/10 text-destructive rounded-lg p-3">
-              <p className="text-sm">{error}</p>
-            </div>
-          </motion.div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
+          <div ref={messagesEndRef} />
+        </div>
+      )}
 
       {/* Quick Actions */}
-      <div className="p-2 border-t border-border flex flex-wrap gap-2 bg-muted/30">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            handleQuickAction("Suggest 5 creative note topics for me")
-          }
-          className="flex items-center gap-1 text-xs"
-        >
-          <Lightbulb className="h-3 w-3" />
-          Suggest Topics
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            handleQuickAction(
-              "What are the trending topics in technology today?",
-            )
-          }
-          className="flex items-center gap-1 text-xs"
-        >
-          <TrendingUp className="h-3 w-3" />
-          Tech Trends
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            handleQuickAction(
-              "What are some trending lifestyle topics I could write about?",
-            )
-          }
-          className="flex items-center gap-1 text-xs"
-        >
-          <TrendingUp className="h-3 w-3" />
-          Lifestyle Trends
-        </Button>
-      </div>
+      {!isMinimized && (
+        <div className="p-2 border-t border-border flex flex-wrap gap-2 bg-muted/30">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              handleQuickAction("Suggest 5 creative note topics for me")
+            }
+            className="flex items-center gap-1 text-xs"
+          >
+            <Lightbulb className="h-3 w-3" />
+            Suggest Topics
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              handleQuickAction(
+                "What are the trending topics in technology today?",
+              )
+            }
+            className="flex items-center gap-1 text-xs"
+          >
+            <TrendingUp className="h-3 w-3" />
+            Tech Trends
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              handleQuickAction(
+                "What are some trending lifestyle topics I could write about?",
+              )
+            }
+            className="flex items-center gap-1 text-xs"
+          >
+            <TrendingUp className="h-3 w-3" />
+            Lifestyle Trends
+          </Button>
+        </div>
+      )}
 
       {/* Input */}
-      <form onSubmit={handleSendMessage} className="p-3 border-t flex gap-2">
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask me anything..."
-          className="flex-1"
-          disabled={isLoading}
-        />
-        <Button type="submit" size="sm" disabled={!input.trim() || isLoading}>
-          <Send className="h-4 w-4" />
-        </Button>
-      </form>
+      {!isMinimized && (
+        <form onSubmit={handleSendMessage} className="p-3 border-t flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask me anything..."
+            className="flex-1"
+            disabled={isLoading || isProcessingChunks}
+          />
+          <Button
+            type="submit"
+            size="sm"
+            disabled={!input.trim() || isLoading || isProcessingChunks}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+      )}
     </div>
   );
 }

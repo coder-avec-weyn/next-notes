@@ -370,37 +370,38 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* AI Chatbot Button */}
-      <motion.div
-        className="fixed top-4 right-4 z-50"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.5, duration: 0.3 }}
-        {...buttonPress}
-      >
-        <Button
-          onClick={() => setShowChatbot(!showChatbot)}
-          className="rounded-full w-12 h-12 p-0 bg-primary shadow-lg hover:shadow-xl"
-          aria-label="AI Assistant"
-        >
-          <Sparkles className="h-5 w-5" />
-        </Button>
-      </motion.div>
+      {/* AI Chatbot Floating Button */}
+      <AnimatePresence>
+        {!showChatbot && (
+          <motion.div
+            className="fixed bottom-6 right-6 z-50"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            {...buttonPress}
+          >
+            <Button
+              onClick={() => setShowChatbot(true)}
+              className="rounded-full w-14 h-14 p-0 bg-gradient-to-r from-primary to-primary/80 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              aria-label="Open AI Assistant"
+            >
+              <Sparkles className="h-6 w-6" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* AI Chatbot Panel */}
       <AnimatePresence>
         {showChatbot && (
           <motion.div
-            className="fixed bottom-4 right-4 w-full max-w-md z-50"
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
           >
-            <Chatbot
-              onClose={() => setShowChatbot(false)}
-              className="h-[500px] max-h-[80vh] shadow-xl"
-            />
+            <Chatbot onClose={() => setShowChatbot(false)} isFloating={true} />
           </motion.div>
         )}
       </AnimatePresence>

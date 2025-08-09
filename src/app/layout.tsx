@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/toaster";
 import { InstallPrompt } from "@/components/install-prompt";
+import { FloatingChatbot } from "@/components/floating-chatbot";
 
 export const metadata: Metadata = {
   title: "NotesApp - Your Personal Notes",
@@ -171,6 +172,7 @@ export default function RootLayout({
           <Providers>{children}</Providers>
           <Toaster />
           <InstallPrompt />
+          <FloatingChatbot />
         </ThemeProvider>
         <TempoInit />
       </body>
