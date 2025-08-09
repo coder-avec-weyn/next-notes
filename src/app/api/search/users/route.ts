@@ -71,18 +71,72 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get public notes count for each user
+    // Get public notes count for each user with detailed logging
     const usersWithNotesCount = await Promise.all(
       (users || []).map(async (user) => {
-        const { count } = await supabase
+        console.log(
+          `[Search API] Fetching notes count for user ${user.username} (${user.id})`,
+        );
+
+        // Log the SQL query that will be executed
+        console.log(
+          `[SQL] Search API - Public notes count query for user ${user.id}:\n
+          SELECT COUNT(*) 
+          FROM public.notes 
+          WHERE user_id = '${user.id}' 
+            AND is_public = true 
+            AND is_archived = false;`,
+        );
+
+        // First try using count
+        const { count, error: countError } = await supabase
           .from("notes")
           .select("*", { count: "exact", head: true })
           .eq("user_id", user.id)
-          .eq("is_public", true);
+          .eq("is_public", true)
+          .eq("is_archived", false);
+
+        if (countError) {
+          console.error(
+            `[Search API] Error counting notes for user ${user.id}:`,
+            countError,
+          );
+        }
+
+        // If count returns 0 or error, try alternative approach
+        let finalCount = count || 0;
+
+        if (countError || finalCount === 0) {
+          console.log(
+            `[Search API] Trying alternative approach to count notes for user ${user.id}...`,
+          );
+          const { data: notesData, error: fetchError } = await supabase
+            .from("notes")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("is_public", true)
+            .eq("is_archived", false);
+
+          if (!fetchError && notesData) {
+            finalCount = notesData.length;
+            console.log(
+              `[Search API] Alternative count method found ${finalCount} notes for user ${user.id}`,
+            );
+          } else if (fetchError) {
+            console.error(
+              `[Search API] Error in alternative count method for user ${user.id}:`,
+              fetchError,
+            );
+          }
+        }
+
+        console.log(
+          `[Search API] User ${user.username} has ${finalCount} public notes`,
+        );
 
         return {
           ...user,
-          public_notes_count: count || 0,
+          public_notes_count: finalCount,
         };
       }),
     );

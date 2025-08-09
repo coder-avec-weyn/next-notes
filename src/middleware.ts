@@ -47,6 +47,34 @@ export async function middleware(req: NextRequest) {
     if (error) {
       console.error("Auth session error:", error);
     }
+
+    // Define public routes that don't require authentication
+    const publicRoutes = ["/", "/sign-in", "/sign-up", "/forgot-password"];
+
+    // Check if the current path is a public route
+    const isPublicRoute = publicRoutes.some(
+      (route) =>
+        req.nextUrl.pathname === route ||
+        req.nextUrl.pathname.startsWith(route + "/"),
+    );
+
+    // If user is not authenticated and trying to access a protected route
+    if (!session && !isPublicRoute) {
+      // Redirect to sign-in page
+      const signInUrl = new URL("/sign-in", req.url);
+      // Add the original URL as a redirect parameter so user can be redirected back after sign-in
+      signInUrl.searchParams.set("redirectTo", req.nextUrl.pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+
+    // If user is authenticated and trying to access auth pages, redirect to dashboard
+    if (
+      session &&
+      (req.nextUrl.pathname === "/sign-in" ||
+        req.nextUrl.pathname === "/sign-up")
+    ) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
   } catch (error) {
     console.error("Middleware error:", error);
   }

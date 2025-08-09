@@ -20,12 +20,26 @@ export async function GET(
       .eq("id", id)
       .single();
 
+    console.log("Checking user profile for ID:", id);
     if (userError || !userProfile?.public_profile) {
       return NextResponse.json(
         { error: "User not found or profile is private" },
         { status: 404 },
       );
     }
+
+    // Log SQL for public notes fetch
+    console.log("[SQL] Fetching public notes:");
+    console.log(
+      `SELECT *
+       FROM public.notes
+       WHERE user_id = '${id}'
+         AND is_public = true
+         AND is_archived = false
+       ORDER BY updated_at DESC
+       LIMIT ${limit}
+       OFFSET ${offset};`,
+    );
 
     // Get public notes
     const { data, error } = await supabase
