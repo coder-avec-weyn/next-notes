@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
 import {
@@ -16,8 +16,11 @@ import {
   BarChart3,
   Clock,
   ArrowRight,
+  MessageSquare,
+  Sparkles,
 } from "lucide-react";
 import { InstallPrompt } from "@/components/install-prompt";
+import { Chatbot } from "@/components/chatbot";
 import { createClient } from "../../../supabase/client";
 import { useNotes } from "@/hooks/use-notes";
 import { Button } from "@/components/ui/button";
@@ -25,7 +28,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { fadeInUp, staggerContainer, staggerItem } from "@/utils/animations";
+import {
+  fadeInUp,
+  staggerContainer,
+  staggerItem,
+  buttonPress,
+} from "@/utils/animations";
 import { NOTE_CATEGORIES } from "@/types/note";
 
 export default function Dashboard() {
@@ -33,6 +41,7 @@ export default function Dashboard() {
   const notesList = notes || [];
   const [user, setUser] = useState<any>(null);
   const [userLoading, setUserLoading] = useState(true);
+  const [showChatbot, setShowChatbot] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -104,7 +113,7 @@ export default function Dashboard() {
 
   return (
     <motion.main
-      className="min-h-screen bg-background"
+      className="min-h-screen bg-background relative"
       variants={staggerContainer}
       initial="initial"
       animate="animate"
@@ -143,6 +152,14 @@ export default function Dashboard() {
                 Pinned
               </Button>
             </Link>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setShowChatbot(!showChatbot)}
+            >
+              <MessageSquare className="w-4 h-4" />
+              AI Assistant
+            </Button>
             <InstallPrompt showAsButton={true} buttonVariant="outline" />
           </div>
         </motion.div>
@@ -352,6 +369,41 @@ export default function Dashboard() {
           </motion.div>
         </div>
       </div>
+
+      {/* AI Chatbot Button */}
+      <motion.div
+        className="fixed top-4 right-4 z-50"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.5, duration: 0.3 }}
+        {...buttonPress}
+      >
+        <Button
+          onClick={() => setShowChatbot(!showChatbot)}
+          className="rounded-full w-12 h-12 p-0 bg-primary shadow-lg hover:shadow-xl"
+          aria-label="AI Assistant"
+        >
+          <Sparkles className="h-5 w-5" />
+        </Button>
+      </motion.div>
+
+      {/* AI Chatbot Panel */}
+      <AnimatePresence>
+        {showChatbot && (
+          <motion.div
+            className="fixed bottom-4 right-4 w-full max-w-md z-50"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Chatbot
+              onClose={() => setShowChatbot(false)}
+              className="h-[500px] max-h-[80vh] shadow-xl"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.main>
   );
 }

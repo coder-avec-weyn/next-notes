@@ -169,3 +169,25 @@ export const NOTE_WEATHER = [
   "overcast",
   "humid",
 ] as const;
+
+export interface ChatMessage {
+  id: string;
+  user_id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface AiSuggestion {
+  id: string;
+  note_id: string;
+  original_content: string;
+  suggested_content: string;
+  type: "improve" | "rewrite" | "style";
+  style?: "formal" | "casual" | "concise" | "creative";
+  is_applied: boolean;
+  created_at: string;
+  updated_at?: string;
+}

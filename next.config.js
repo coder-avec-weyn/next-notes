@@ -155,4 +155,10 @@ if (!nextConfig.transpilePackages.includes("framer-motion")) {
   nextConfig.transpilePackages.push("framer-motion");
 }
 
+// Ensure framer-motion is properly handled in client components
+nextConfig.experimental = {
+  ...nextConfig.experimental,
+  esmExternals: "loose",
+};
+
 module.exports = withPWA(nextConfig);

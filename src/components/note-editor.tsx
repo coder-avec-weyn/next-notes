@@ -24,6 +24,10 @@ import {
   Cloud,
   FileText,
   Globe,
+  Sparkles,
+  Check,
+  Wand2,
+  Pencil,
 } from "lucide-react";
 import {
   Note,
@@ -88,6 +92,16 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
   const [weather, setWeather] = useState("none");
   const [templates, setTemplates] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [showWritingAssistant, setShowWritingAssistant] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiMode, setAiMode] = useState<"improve" | "rewrite" | "style">(
+    "improve",
+  );
+  const [aiStyle, setAiStyle] = useState<
+    "formal" | "casual" | "concise" | "creative"
+  >("formal");
 
   const existingNote = noteId ? notes.find((n) => n.id === noteId) : null;
   const isEditing = !!existingNote;
@@ -192,6 +206,66 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       handleSave();
+    }
+  };
+
+  const handleAiAssist = async () => {
+    if (!content.trim() || aiLoading) return;
+
+    setAiLoading(true);
+    setAiError(null);
+    setAiSuggestion("");
+
+    try {
+      // Prepare the prompt based on the selected mode and style
+      let prompt = "";
+
+      if (aiMode === "improve") {
+        prompt = `Improve the following text for better grammar, clarity, and flow without changing the meaning: ${content}`;
+      } else if (aiMode === "rewrite") {
+        prompt = `Rewrite the following text to make it more engaging while preserving the key points: ${content}`;
+      } else if (aiMode === "style") {
+        prompt = `Rewrite the following text in a ${aiStyle} style: ${content}`;
+      }
+
+      // Check if content exceeds character limit
+      if (prompt.length > 2000) {
+        setAiError(
+          "Text is too long for AI processing. Please shorten your note or select a portion to improve.",
+        );
+        setAiLoading(false);
+        return;
+      }
+
+      const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt,
+          type: "writing_assistant",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setAiSuggestion(data.response);
+    } catch (err) {
+      console.error("Error fetching from Gemini API:", err);
+      setAiError("Sorry, I couldn't process your request. Please try again.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applyAiSuggestion = () => {
+    if (aiSuggestion) {
+      setContent(aiSuggestion);
+      setAiSuggestion("");
     }
   };
 
@@ -327,7 +401,18 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                 />
               </div>
 
-              <Separator />
+              <div className="flex items-center justify-between">
+                <Separator className="flex-1" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowWritingAssistant(!showWritingAssistant)}
+                  className="ml-2 gap-1 text-xs"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  AI Writing Assistant
+                </Button>
+              </div>
 
               {/* Content */}
               <div>
@@ -339,6 +424,154 @@ export function NoteEditor({ noteId, onClose }: NoteEditorProps) {
                   className="min-h-[400px] border-none bg-transparent px-0 resize-none focus-visible:ring-0 text-base leading-relaxed"
                 />
               </div>
+
+              {/* AI Writing Assistant */}
+              <AnimatePresence>
+                {showWritingAssistant && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="border rounded-lg overflow-hidden"
+                  >
+                    <div className="bg-muted/30 p-3 border-b flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        <h3 className="text-sm font-medium">
+                          AI Writing Assistant
+                        </h3>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowWritingAssistant(false)}
+                        className="h-7 w-7 p-0"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+
+                    <div className="p-3 space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant={aiMode === "improve" ? "default" : "outline"}
+                          onClick={() => setAiMode("improve")}
+                          className="text-xs gap-1"
+                        >
+                          <Pencil className="h-3 w-3" />
+                          Improve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={aiMode === "rewrite" ? "default" : "outline"}
+                          onClick={() => setAiMode("rewrite")}
+                          className="text-xs gap-1"
+                        >
+                          <Wand2 className="h-3 w-3" />
+                          Rewrite
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={aiMode === "style" ? "default" : "outline"}
+                          onClick={() => setAiMode("style")}
+                          className="text-xs gap-1"
+                        >
+                          <Type className="h-3 w-3" />
+                          Style
+                        </Button>
+                      </div>
+
+                      {aiMode === "style" && (
+                        <div className="flex flex-wrap gap-2">
+                          <Badge
+                            variant={
+                              aiStyle === "formal" ? "default" : "outline"
+                            }
+                            className={`cursor-pointer ${aiStyle === "formal" ? "bg-primary" : ""}`}
+                            onClick={() => setAiStyle("formal")}
+                          >
+                            Formal
+                          </Badge>
+                          <Badge
+                            variant={
+                              aiStyle === "casual" ? "default" : "outline"
+                            }
+                            className={`cursor-pointer ${aiStyle === "casual" ? "bg-primary" : ""}`}
+                            onClick={() => setAiStyle("casual")}
+                          >
+                            Casual
+                          </Badge>
+                          <Badge
+                            variant={
+                              aiStyle === "concise" ? "default" : "outline"
+                            }
+                            className={`cursor-pointer ${aiStyle === "concise" ? "bg-primary" : ""}`}
+                            onClick={() => setAiStyle("concise")}
+                          >
+                            Concise
+                          </Badge>
+                          <Badge
+                            variant={
+                              aiStyle === "creative" ? "default" : "outline"
+                            }
+                            className={`cursor-pointer ${aiStyle === "creative" ? "bg-primary" : ""}`}
+                            onClick={() => setAiStyle("creative")}
+                          >
+                            Creative
+                          </Badge>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between">
+                        <Button
+                          size="sm"
+                          onClick={handleAiAssist}
+                          disabled={!content.trim() || aiLoading}
+                          className="text-xs gap-1"
+                        >
+                          {aiLoading ? (
+                            <>
+                              <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-3 w-3" />
+                              Generate Suggestion
+                            </>
+                          )}
+                        </Button>
+
+                        {aiSuggestion && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={applyAiSuggestion}
+                            className="text-xs gap-1"
+                          >
+                            <Check className="h-3 w-3" />
+                            Apply Changes
+                          </Button>
+                        )}
+                      </div>
+
+                      {aiError && (
+                        <div className="p-2 bg-destructive/10 text-destructive text-xs rounded">
+                          {aiError}
+                        </div>
+                      )}
+
+                      {aiSuggestion && (
+                        <div className="border rounded p-3 bg-muted/20 text-sm max-h-[200px] overflow-y-auto">
+                          <p className="whitespace-pre-wrap">{aiSuggestion}</p>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 

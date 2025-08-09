@@ -1,14 +1,30 @@
-import Link from 'next/link'
-import { createClient } from '../../supabase/server'
-import { Button } from './ui/button'
-import { User, UserCircle } from 'lucide-react'
-import UserProfile from './user-profile'
+"use client";
 
-export default async function Navbar() {
-  const supabase = createClient()
+import Link from "next/link";
+import { createClient } from "../../supabase/client";
+import { Button } from "./ui/button";
+import UserProfile from "./user-profile";
+import { useEffect, useState } from "react";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
-  const { data: { user } } = await (await supabase).auth.getUser()
+export default function Navbar() {
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const supabase = createClient();
 
+  useEffect(() => {
+    const getUser = async () => {
+      if (supabase) {
+        try {
+          const { data } = await supabase.auth.getUser();
+          setUser(data.user);
+        } catch (error) {
+          console.warn("Failed to get user:", error);
+        }
+      }
+    };
+
+    getUser();
+  }, [supabase]);
 
   return (
     <nav className="w-full border-b border-gray-200 bg-white py-2">
@@ -23,11 +39,9 @@ export default async function Navbar() {
                 href="/dashboard"
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
               >
-                <Button>
-                  Dashboard
-                </Button>
+                <Button>Dashboard</Button>
               </Link>
-              <UserProfile  />
+              <UserProfile />
             </>
           ) : (
             <>
@@ -48,5 +62,5 @@ export default async function Navbar() {
         </div>
       </div>
     </nav>
-  )
+  );
 }
