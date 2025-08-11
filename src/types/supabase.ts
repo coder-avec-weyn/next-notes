@@ -199,6 +199,60 @@ export type Database = {
         }
         Relationships: []
       }
+      poetry: {
+        Row: {
+          color: string | null
+          content: string | null
+          created_at: string | null
+          id: string
+          is_archived: boolean | null
+          is_favorite: boolean | null
+          is_pinned: boolean | null
+          is_public: boolean | null
+          mood: string | null
+          style: Json | null
+          tags: string[] | null
+          theme: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          is_archived?: boolean | null
+          is_favorite?: boolean | null
+          is_pinned?: boolean | null
+          is_public?: boolean | null
+          mood?: string | null
+          style?: Json | null
+          tags?: string[] | null
+          theme?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          is_archived?: boolean | null
+          is_favorite?: boolean | null
+          is_pinned?: boolean | null
+          is_public?: boolean | null
+          mood?: string | null
+          style?: Json | null
+          tags?: string[] | null
+          theme?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       templates: {
         Row: {
           category: string | null

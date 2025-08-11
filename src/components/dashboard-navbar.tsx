@@ -25,6 +25,7 @@ import {
 import { useRouter } from "next/navigation";
 import { ThemeSwitcher } from "./theme-switcher";
 import { cn } from "@/lib/utils";
+import { Feather } from "lucide-react";
 
 export default function DashboardNavbar() {
   const supabase = createClient();
@@ -34,6 +35,7 @@ export default function DashboardNavbar() {
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: Home },
     { href: "/dashboard/notes", label: "Notes", icon: FileText },
+    { href: "/dashboard/poetry", label: "Poetry", icon: Feather },
     { href: "/dashboard/search", label: "Search", icon: Search },
     { href: "/dashboard/profile", label: "Profile", icon: User },
   ];

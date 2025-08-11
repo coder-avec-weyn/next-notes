@@ -28,18 +28,25 @@ export default function Home() {
 
   useEffect(() => {
     const getUser = async () => {
-      const client = createClient();
-      if (client) {
-        try {
-          const { data } = await client.auth.getUser();
-          setUser(data.user);
-        } catch (error) {
-          console.warn("Failed to get user:", error);
+      try {
+        const client = createClient();
+        if (client) {
+          try {
+            const { data, error } = await client.auth.getUser();
+            if (error) throw error;
+            if (data && data.user) {
+              setUser(data.user);
+            }
+          } catch (error) {
+            console.warn("Failed to get user:", error);
+          }
+        } else {
+          console.warn(
+            "Supabase client not available. User authentication features will be disabled.",
+          );
         }
-      } else {
-        console.warn(
-          "Supabase client not available. User authentication features will be disabled.",
-        );
+      } catch (error) {
+        console.error("Error initializing Supabase client:", error);
       }
     };
 

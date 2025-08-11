@@ -35,8 +35,9 @@ import {
   buttonPress,
 } from "@/utils/animations";
 import { NOTE_CATEGORIES } from "@/types/note";
+import { Feather } from "lucide-react";
 
-export default function Dashboard() {
+export default function DashboardPage() {
   const { notes = [], loading } = useNotes();
   const notesList = notes || [];
   const [user, setUser] = useState<any>(null);
@@ -113,21 +114,19 @@ export default function Dashboard() {
 
   return (
     <motion.main
-      className="min-h-screen bg-background relative"
+      className="min-h-screen bg-background"
       variants={staggerContainer}
       initial="initial"
       animate="animate"
     >
       <div className="container mx-auto px-4 py-8">
-        {/* Welcome Header */}
+        {/* Header */}
         <motion.div className="mb-8" variants={fadeInUp}>
           <h1 className="text-3xl font-bold mb-2 text-foreground">
-            {getGreeting()},{" "}
-            {user?.user_metadata?.name || user?.email?.split("@")[0] || "there"}
-            !
+            Welcome back, {user?.user_metadata?.full_name || "Writer"}!
           </h1>
           <p className="text-muted-foreground">
-            Here's an overview of your notes and activity.
+            Continue your creative journey with notes and poetry.
           </p>
         </motion.div>
 
@@ -138,6 +137,12 @@ export default function Dashboard() {
               <Button className="gap-2">
                 <Plus className="w-4 h-4" />
                 New Note
+              </Button>
+            </Link>
+            <Link href="/dashboard/poetry">
+              <Button className="gap-2">
+                <Feather className="w-4 h-4" />
+                New Poem
               </Button>
             </Link>
             <Link href="/dashboard/notes?filter=favorites">
@@ -152,15 +157,6 @@ export default function Dashboard() {
                 Pinned
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => setShowChatbot(!showChatbot)}
-            >
-              <MessageSquare className="w-4 h-4" />
-              AI Assistant
-            </Button>
-            <InstallPrompt showAsButton={true} buttonVariant="outline" />
           </div>
         </motion.div>
 

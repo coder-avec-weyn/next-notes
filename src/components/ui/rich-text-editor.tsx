@@ -184,7 +184,6 @@ export function RichTextEditor({
         [{ list: "ordered" }, { list: "bullet" }],
         ["blockquote", "code-block"],
         ["link"],
-        [{ color: colorPalette }],
         [{ align: [] }],
         ["clean"],
       ],

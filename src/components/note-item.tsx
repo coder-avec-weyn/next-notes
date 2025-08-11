@@ -350,7 +350,10 @@ export function NoteItem({ note, viewMode, onEdit }: NoteItemProps) {
                   : "text-base line-clamp-2",
               )}
             >
-              {truncateContent(note.content, viewMode === "grid" ? 150 : 200)}
+              {truncateContent(
+                note.content.replace(/<[^>]*>/g, ""),
+                viewMode === "grid" ? 150 : 200,
+              )}
             </p>
           )}
 
