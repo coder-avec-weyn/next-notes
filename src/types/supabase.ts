@@ -201,6 +201,7 @@ export type Database = {
       }
       poetry: {
         Row: {
+          background_texture: string | null
           color: string | null
           content: string | null
           created_at: string | null
@@ -209,15 +210,23 @@ export type Database = {
           is_favorite: boolean | null
           is_pinned: boolean | null
           is_public: boolean | null
+          letter_spacing: number | null
           mood: string | null
+          poetry_form: string | null
+          reading_time: number | null
+          rhyme_scheme: string | null
+          stanza_format: string | null
           style: Json | null
           tags: string[] | null
           theme: string | null
           title: string
           updated_at: string | null
           user_id: string
+          view_count: number | null
+          word_count: number | null
         }
         Insert: {
+          background_texture?: string | null
           color?: string | null
           content?: string | null
           created_at?: string | null
@@ -226,15 +235,23 @@ export type Database = {
           is_favorite?: boolean | null
           is_pinned?: boolean | null
           is_public?: boolean | null
+          letter_spacing?: number | null
           mood?: string | null
+          poetry_form?: string | null
+          reading_time?: number | null
+          rhyme_scheme?: string | null
+          stanza_format?: string | null
           style?: Json | null
           tags?: string[] | null
           theme?: string | null
           title?: string
           updated_at?: string | null
           user_id: string
+          view_count?: number | null
+          word_count?: number | null
         }
         Update: {
+          background_texture?: string | null
           color?: string | null
           content?: string | null
           created_at?: string | null
@@ -243,12 +260,46 @@ export type Database = {
           is_favorite?: boolean | null
           is_pinned?: boolean | null
           is_public?: boolean | null
+          letter_spacing?: number | null
           mood?: string | null
+          poetry_form?: string | null
+          reading_time?: number | null
+          rhyme_scheme?: string | null
+          stanza_format?: string | null
           style?: Json | null
           tags?: string[] | null
           theme?: string | null
           title?: string
           updated_at?: string | null
+          user_id?: string
+          view_count?: number | null
+          word_count?: number | null
+        }
+        Relationships: []
+      }
+      poetry_ai_usage: {
+        Row: {
+          created_at: string | null
+          id: string
+          prompt_length: number
+          prompt_type: string
+          response_length: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          prompt_length: number
+          prompt_type: string
+          response_length: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          prompt_length?: number
+          prompt_type?: string
+          response_length?: number
           user_id?: string
         }
         Relationships: []
@@ -489,6 +540,27 @@ export type Database = {
       }
     }
     Views: {
+      poetry_analytics: {
+        Row: {
+          archived_poems: number | null
+          avg_reading_time: number | null
+          avg_words_per_poem: number | null
+          favorite_poems: number | null
+          forms_used: string[] | null
+          moods_used: string[] | null
+          pinned_poems: number | null
+          public_poems: number | null
+          themes_used: string[] | null
+          total_poems: number | null
+          total_reading_time: number | null
+          total_words: number | null
+          unique_forms: number | null
+          unique_moods: number | null
+          unique_themes: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       public_users_search: {
         Row: {
           avatar_url: string | null

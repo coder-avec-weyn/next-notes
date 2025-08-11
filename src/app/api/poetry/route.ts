@@ -52,7 +52,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ data });
+    // Calculate word count and reading time for each poem
+    const enrichedData = data.map(poem => ({
+      ...poem,
+      word_count: poem.content ? poem.content.split(/\s+/).filter(word => word.length > 0).length : 0,
+      reading_time: poem.content ? Math.ceil(poem.content.split(/\s+/).filter(word => word.length > 0).length / 200) : 0,
+    }));
+
+    return NextResponse.json({ data: enrichedData });
   } catch (error) {
     console.error("API Error:", error);
     return NextResponse.json(
@@ -94,7 +101,13 @@ export async function POST(request: NextRequest) {
       is_public,
       mood,
       theme,
+      poetry_form,
+      rhyme_scheme,
     } = body;
+
+    // Calculate word count and reading time
+    const wordCount = content ? content.split(/\s+/).filter((word: string) => word.length > 0).length : 0;
+    const readingTime = Math.ceil(wordCount / 200);
 
     const { data, error } = await supabase
       .from("poetry")
@@ -112,6 +125,11 @@ export async function POST(request: NextRequest) {
           italics: false,
           bold: false,
           uppercase: false,
+          letterSpacing: 0,
+          stanzaSpacing: 1.5,
+          underline: false,
+          textShadow: false,
+          backgroundTexture: "parchment",
         },
         tags: tags || [],
         color: color || "#ffffff",
@@ -120,6 +138,10 @@ export async function POST(request: NextRequest) {
         is_public: is_public || false,
         mood: mood || null,
         theme: theme || null,
+        poetry_form: poetry_form || null,
+        rhyme_scheme: rhyme_scheme || null,
+        word_count: wordCount,
+        reading_time: readingTime,
       })
       .select()
       .single();

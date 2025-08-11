@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Poetry } from '@/types/poetry';
+import { Poetry, PoetryAnalytics } from '@/types/poetry';
 import { useToast } from '@/components/ui/use-toast';
 
 export function usePoetry() {
@@ -224,7 +224,7 @@ export function usePoetry() {
     }
   }, [toast]);
 
-  const getPoetryAnalytics = useCallback(async () => {
+  const getPoetryAnalytics = useCallback(async (): Promise<PoetryAnalytics | null> => {
     try {
       const response = await fetch('/api/poetry/analytics');
       if (response.ok) {
@@ -233,6 +233,52 @@ export function usePoetry() {
       }
     } catch (error) {
       console.error('Error fetching poetry analytics:', error);
+    }
+    return null;
+  }, []);
+
+  const getRhymeSuggestions = useCallback(async (word: string) => {
+    try {
+      const response = await fetch(`/api/poetry/rhymes?word=${encodeURIComponent(word)}`);
+      if (response.ok) {
+        const result = await response.json();
+        return result.data || [];
+      }
+    } catch (error) {
+      console.error('Error fetching rhyme suggestions:', error);
+    }
+    return [];
+  }, []);
+
+  const getSynonymSuggestions = useCallback(async (word: string) => {
+    try {
+      const response = await fetch(`/api/poetry/synonyms?word=${encodeURIComponent(word)}`);
+      if (response.ok) {
+        const result = await response.json();
+        return result.data || [];
+      }
+    } catch (error) {
+      console.error('Error fetching synonym suggestions:', error);
+    }
+    return [];
+  }, []);
+
+  const analyzePoetryForm = useCallback(async (content: string) => {
+    try {
+      const response = await fetch('/api/poetry/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        return result.data;
+      }
+    } catch (error) {
+      console.error('Error analyzing poetry form:', error);
     }
     return null;
   }, []);
@@ -249,5 +295,8 @@ export function usePoetry() {
     duplicatePoetry,
     exportPoetry,
     getPoetryAnalytics,
+    getRhymeSuggestions,
+    getSynonymSuggestions,
+    analyzePoetryForm,
   };
 }

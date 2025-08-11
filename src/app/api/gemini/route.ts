@@ -183,8 +183,14 @@ export async function POST(request: NextRequest) {
     // Adjust temperature and other settings based on request type
     let temperature = 0.7;
     let maxOutputTokens = MAX_OUTPUT_TOKENS;
+    let systemPrompt = "";
 
-    if (type === "writing_assistant") {
+    if (type === "poetry_assistant") {
+      // More creative for poetry assistance
+      temperature = 0.8;
+      maxOutputTokens = 1536;
+      systemPrompt = "You are a master poet and poetry assistant. Help with creative writing, formatting, style improvements, and poetic techniques. Be inspiring and maintain the artistic essence of poetry.";
+    } else if (type === "writing_assistant") {
       // More precise for writing assistance
       temperature = 0.4;
       maxOutputTokens = 1536;
@@ -200,7 +206,7 @@ export async function POST(request: NextRequest) {
         {
           parts: [
             {
-              text: truncatedPrompt,
+              text: systemPrompt ? `${systemPrompt}\n\n${truncatedPrompt}` : truncatedPrompt,
             },
           ],
         },
