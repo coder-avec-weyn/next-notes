@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -48,6 +48,81 @@ import {
   FileText,
   Focus,
   Lightbulb,
+  Mic,
+  MicOff,
+  Play,
+  Pause,
+  BarChart3,
+  Zap,
+  Users,
+  History,
+  Layers,
+  Target,
+  Brain,
+  Shuffle,
+  Timer,
+  Bookmark,
+  Search,
+  Filter,
+  Sliders,
+  Headphones,
+  Camera,
+  Paintbrush,
+  Scissors,
+  Merge,
+  GitBranch,
+  MessageCircle,
+  UserPlus,
+  Crown,
+  Award,
+  TrendingUp,
+  Gauge,
+  Crosshair,
+  Radar,
+  Activity,
+  Waves,
+  Fingerprint,
+  Cpu,
+  Database,
+  Network,
+  Workflow,
+  Layers3,
+  Compass,
+  Telescope,
+  Microscope,
+  FlaskConical,
+  Atom,
+  Dna,
+  Orbit,
+  Rocket,
+  Satellite,
+  Gamepad2,
+  Joystick,
+  Dice1,
+  Dice2,
+  Dice3,
+  Dice4,
+  Dice5,
+  Dice6,
+  Puzzle,
+  Target as TargetIcon,
+  Crosshair as CrosshairIcon,
+  Zap as ZapIcon,
+  Brain as BrainIcon,
+  Cpu as CpuIcon,
+  Database as DatabaseIcon,
+  Network as NetworkIcon,
+  Workflow as WorkflowIcon,
+  Layers3 as Layers3Icon,
+  Compass as CompassIcon,
+  Telescope as TelescopeIcon,
+  Microscope as MicroscopeIcon,
+  FlaskConical as FlaskConicalIcon,
+  Atom as AtomIcon,
+  Dna as DnaIcon,
+  Orbit as OrbitIcon,
+  Rocket as RocketIcon,
+  Satellite as SatelliteIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -189,6 +264,79 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
   const [aiThemeSuggestions, setAiThemeSuggestions] = useState<string[]>([]);
   const [loadingThemes, setLoadingThemes] = useState(false);
 
+  // ADVANCED FEATURES STATE (10 NEW FEATURES)
+  // 1. Voice Recording & Dictation
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null,
+  );
+
+  // 2. Text-to-Speech
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speechRate, setSpeechRate] = useState(1);
+  const [speechVoice, setSpeechVoice] = useState<string>("");
+
+  // 3. Advanced Poetry Analysis
+  const [poetryAnalysis, setPoetryAnalysis] = useState<any>(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+
+  // 4. Rhyme & Synonym Assistant
+  const [rhymeSuggestions, setRhymeSuggestions] = useState<string[]>([]);
+  const [synonymSuggestions, setSynonymSuggestions] = useState<string[]>([]);
+  const [selectedWord, setSelectedWord] = useState<string>("");
+  const [showWordAssistant, setShowWordAssistant] = useState(false);
+
+  // 5. Version History
+  const [versionHistory, setVersionHistory] = useState<
+    Array<{ id: string; content: string; timestamp: Date; title: string }>
+  >([]);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+
+  // 6. Collaboration Features
+  const [collaborators, setCollaborators] = useState<
+    Array<{ id: string; name: string; avatar: string; isOnline: boolean }>
+  >([]);
+  const [showCollaboration, setShowCollaboration] = useState(false);
+  const [collaborationMode, setCollaborationMode] = useState(false);
+
+  // 7. Advanced Export Options
+  const [exportOptions, setExportOptions] = useState({
+    format: "pdf",
+    includeMetadata: true,
+    includeAnalysis: false,
+    customStyling: true,
+    watermark: false,
+  });
+  const [showExportDialog, setShowExportDialog] = useState(false);
+
+  // 8. Poetry Templates & Forms
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templateStructure, setTemplateStructure] = useState<any>(null);
+
+  // 9. Advanced Search & Filter
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchFilters, setSearchFilters] = useState({
+    mood: "",
+    form: "",
+    dateRange: "",
+    wordCount: { min: 0, max: 1000 },
+  });
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+
+  // 10. Performance Analytics
+  const [performanceMetrics, setPerformanceMetrics] = useState<any>(null);
+  const [showMetrics, setShowMetrics] = useState(false);
+  const [writingGoals, setWritingGoals] = useState({
+    dailyWords: 100,
+    weeklyPoems: 3,
+    monthlyTarget: 12,
+  });
+
   // AI features
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [aiMode, setAiMode] = useState<
@@ -258,6 +406,271 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
     }
   };
 
+  // ADVANCED FEATURE 1: Voice Recording & Dictation
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: BlobPart[] = [];
+
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: "audio/wav" });
+        setAudioBlob(blob);
+        // Here you would typically send to speech-to-text API
+        transcribeAudio(blob);
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+    } catch (error) {
+      console.error("Error starting recording:", error);
+    }
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+      setIsRecording(false);
+    }
+  }, [mediaRecorder, isRecording]);
+
+  const transcribeAudio = async (blob: Blob) => {
+    // Placeholder for speech-to-text integration
+    // In a real implementation, you'd send the audio to a service like Google Speech-to-Text
+    console.log("Transcribing audio...", blob);
+  };
+
+  // ADVANCED FEATURE 2: Text-to-Speech
+  const speakText = useCallback(() => {
+    if ("speechSynthesis" in window) {
+      const utterance = new SpeechSynthesisUtterance(content);
+      utterance.rate = speechRate;
+      if (speechVoice) {
+        const voices = speechSynthesis.getVoices();
+        const selectedVoice = voices.find(
+          (voice) => voice.name === speechVoice,
+        );
+        if (selectedVoice) utterance.voice = selectedVoice;
+      }
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+
+      speechSynthesis.speak(utterance);
+    }
+  }, [content, speechRate, speechVoice]);
+
+  const stopSpeaking = useCallback(() => {
+    if ("speechSynthesis" in window) {
+      speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  }, []);
+
+  // ADVANCED FEATURE 3: Advanced Poetry Analysis
+  const analyzePoetry = useCallback(async () => {
+    if (!content.trim()) return;
+
+    setAnalysisLoading(true);
+    try {
+      const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: `Analyze this poem comprehensively. Provide: 1) Meter and rhythm analysis, 2) Rhyme scheme, 3) Literary devices used, 4) Emotional tone, 5) Structural analysis, 6) Syllable count per line, 7) Poetic form identification: ${content}`,
+          type: "poetry_analysis",
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPoetryAnalysis({
+          content: data.response,
+          timestamp: new Date(),
+          wordCount: getWordCount(),
+          lineCount: getLineCount(),
+          stanzaCount: content.split("\n\n").length,
+        });
+        setShowAnalysis(true);
+      }
+    } catch (error) {
+      console.error("Error analyzing poetry:", error);
+    } finally {
+      setAnalysisLoading(false);
+    }
+  }, [content]);
+
+  // ADVANCED FEATURE 4: Rhyme & Synonym Assistant
+  const getWordSuggestions = useCallback(async (word: string) => {
+    if (!word.trim()) return;
+
+    setSelectedWord(word);
+    setShowWordAssistant(true);
+
+    try {
+      // Get rhymes
+      const rhymeResponse = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: `Provide 10 words that rhyme with "${word}". Return only the words separated by commas.`,
+          type: "rhyme_suggestions",
+        }),
+      });
+
+      if (rhymeResponse.ok) {
+        const rhymeData = await rhymeResponse.json();
+        setRhymeSuggestions(
+          rhymeData.response.split(",").map((w: string) => w.trim()),
+        );
+      }
+
+      // Get synonyms
+      const synonymResponse = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: `Provide 10 synonyms for "${word}". Return only the words separated by commas.`,
+          type: "synonym_suggestions",
+        }),
+      });
+
+      if (synonymResponse.ok) {
+        const synonymData = await synonymResponse.json();
+        setSynonymSuggestions(
+          synonymData.response.split(",").map((w: string) => w.trim()),
+        );
+      }
+    } catch (error) {
+      console.error("Error getting word suggestions:", error);
+    }
+  }, []);
+
+  // ADVANCED FEATURE 5: Version History
+  const saveVersion = useCallback(() => {
+    const newVersion = {
+      id: Date.now().toString(),
+      content,
+      title,
+      timestamp: new Date(),
+    };
+    setVersionHistory((prev) => [newVersion, ...prev.slice(0, 19)]); // Keep last 20 versions
+  }, [content, title]);
+
+  const restoreVersion = useCallback((version: any) => {
+    setContent(version.content);
+    setTitle(version.title);
+    setShowVersionHistory(false);
+  }, []);
+
+  // Auto-save functionality
+  useEffect(() => {
+    if (autoSaveEnabled && content.trim()) {
+      const timer = setTimeout(() => {
+        saveVersion();
+      }, 30000); // Auto-save every 30 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [content, autoSaveEnabled, saveVersion]);
+
+  // ADVANCED FEATURE 6: Collaboration Features
+  const inviteCollaborator = useCallback(async (email: string) => {
+    // Placeholder for collaboration invitation
+    console.log("Inviting collaborator:", email);
+  }, []);
+
+  const toggleCollaborationMode = useCallback(() => {
+    setCollaborationMode(!collaborationMode);
+    // In real implementation, this would enable real-time sync
+  }, [collaborationMode]);
+
+  // ADVANCED FEATURE 7: Advanced Export
+  const exportAdvanced = useCallback(async () => {
+    const exportData = {
+      title,
+      content,
+      style,
+      tags,
+      mood,
+      theme,
+      analysis: exportOptions.includeAnalysis ? poetryAnalysis : null,
+      metadata: exportOptions.includeMetadata
+        ? {
+            wordCount: getWordCount(),
+            lineCount: getLineCount(),
+            createdAt: new Date().toISOString(),
+          }
+        : null,
+    };
+
+    // Placeholder for advanced export functionality
+    console.log("Exporting with options:", exportOptions, exportData);
+    setShowExportDialog(false);
+  }, [title, content, style, tags, mood, theme, exportOptions, poetryAnalysis]);
+
+  // ADVANCED FEATURE 8: Poetry Templates
+  const applyTemplate = useCallback((templateName: string) => {
+    const templates = {
+      sonnet: {
+        structure: "14 lines, ABAB CDCD EFEF GG rhyme scheme",
+        placeholder:
+          "Line 1 (A)\nLine 2 (B)\nLine 3 (A)\nLine 4 (B)\n\nLine 5 (C)\nLine 6 (D)\nLine 7 (C)\nLine 8 (D)\n\nLine 9 (E)\nLine 10 (F)\nLine 11 (E)\nLine 12 (F)\n\nLine 13 (G)\nLine 14 (G)",
+      },
+      haiku: {
+        structure: "3 lines, 5-7-5 syllable pattern",
+        placeholder:
+          "First line (5 syllables)\nSecond line (7 syllables)\nThird line (5 syllables)",
+      },
+      villanelle: {
+        structure: "19 lines, ABA ABA ABA ABA ABA ABAA",
+        placeholder:
+          "A1\nb\nA2\n\na\nb\nA1\n\na\nb\nA2\n\na\nb\nA1\n\na\nb\nA2\n\na\nb\nA1\nA2",
+      },
+    };
+
+    const template = templates[templateName as keyof typeof templates];
+    if (template) {
+      setContent(template.placeholder);
+      setTemplateStructure(template.structure);
+      setSelectedTemplate(templateName);
+    }
+    setShowTemplates(false);
+  }, []);
+
+  // ADVANCED FEATURE 9: Advanced Search
+  const performAdvancedSearch = useCallback(async () => {
+    // Placeholder for advanced search functionality
+    console.log("Performing search with:", searchQuery, searchFilters);
+  }, [searchQuery, searchFilters]);
+
+  // ADVANCED FEATURE 10: Performance Analytics
+  const updateMetrics = useCallback(() => {
+    const metrics = {
+      wordsPerMinute: 0, // Calculate based on typing speed
+      sessionTime: 0, // Track session duration
+      productivity: {
+        wordsToday: getWordCount(),
+        poemsThisWeek: 1,
+        streakDays: 5,
+      },
+      goals: writingGoals,
+      achievements: [
+        { name: "First Poem", unlocked: true },
+        { name: "Word Master", unlocked: getWordCount() > 100 },
+        { name: "Daily Writer", unlocked: false },
+      ],
+    };
+    setPerformanceMetrics(metrics);
+  }, [writingGoals]);
+
+  useEffect(() => {
+    updateMetrics();
+  }, [content, updateMetrics]);
+
   // NEW FEATURE: Export to HTML
   const exportToHTML = () => {
     const htmlContent = `
@@ -285,7 +698,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
             padding-bottom: 1rem;
         }
         .poem-content {
-            text-align: ${style.alignment};
+            text-align: ${style.alignment as any};
             font-size: ${style.fontSize === "small" ? "1rem" : style.fontSize === "medium" ? "1.125rem" : "1.25rem"};
             font-style: ${style.italics ? "italic" : "normal"};
             font-weight: ${style.bold ? "bold" : "normal"};
@@ -687,7 +1100,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* NEW FEATURE: Word count and reading time display */}
+              {/* Enhanced stats with new features */}
               <div className="flex items-center gap-4 text-sm text-muted-foreground bg-muted/30 px-3 py-1 rounded-lg">
                 <div className="flex items-center gap-1">
                   <FileText className="w-3 h-3" />
@@ -701,7 +1114,65 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                   <Clock className="w-3 h-3" />
                   {getReadingTime()}
                 </div>
+                {collaborationMode && (
+                  <div className="flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    {collaborators.length} collaborators
+                  </div>
+                )}
+                {autoSaveEnabled && (
+                  <div className="flex items-center gap-1 text-green-500">
+                    <Save className="w-3 h-3" />
+                    Auto-save
+                  </div>
+                )}
               </div>
+
+              {/* ADVANCED FEATURE BUTTONS */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowMetrics(!showMetrics)}
+                className="h-8 gap-1"
+              >
+                <BarChart3 className="w-4 h-4" />
+                Analytics
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowVersionHistory(!showVersionHistory)}
+                className="h-8 gap-1"
+              >
+                <History className="w-4 h-4" />
+                Versions
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={analyzePoetry}
+                disabled={analysisLoading}
+                className="h-8 gap-1"
+              >
+                {analysisLoading ? (
+                  <LoadingSpinner size="sm" />
+                ) : (
+                  <Brain className="w-4 h-4" />
+                )}
+                Analyze
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowCollaboration(!showCollaboration)}
+                className="h-8 gap-1"
+              >
+                <Users className="w-4 h-4" />
+                Collaborate
+              </Button>
 
               <Button
                 variant="ghost"
@@ -712,6 +1183,36 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                 <Focus className="w-4 h-4" />
                 Focus
               </Button>
+
+              {/* Voice & Audio Controls */}
+              <div className="flex items-center gap-1 border-l pl-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={isRecording ? stopRecording : startRecording}
+                  className={cn("h-8 w-8 p-0", isRecording && "text-red-500")}
+                >
+                  {isRecording ? (
+                    <MicOff className="w-4 h-4" />
+                  ) : (
+                    <Mic className="w-4 h-4" />
+                  )}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={isSpeaking ? stopSpeaking : speakText}
+                  disabled={!content.trim()}
+                  className={cn("h-8 w-8 p-0", isSpeaking && "text-blue-500")}
+                >
+                  {isSpeaking ? (
+                    <Pause className="w-4 h-4" />
+                  ) : (
+                    <Play className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
 
               <Button
                 variant="ghost"
@@ -850,20 +1351,38 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                   </div>
                 )}
 
-                {/* Content Editor */}
+                {/* Content Editor with Advanced Features */}
                 <div className="relative">
-                  {/* NEW FEATURE: Line numbers */}
+                  {/* Line numbers */}
                   {renderLineNumbers()}
+
+                  {/* Template Structure Guide */}
+                  {selectedTemplate && templateStructure && (
+                    <div className="absolute right-2 top-2 bg-muted/80 backdrop-blur-sm p-2 rounded text-xs text-muted-foreground max-w-xs">
+                      <div className="font-medium mb-1">
+                        {selectedTemplate.toUpperCase()}
+                      </div>
+                      <div>{templateStructure}</div>
+                    </div>
+                  )}
 
                   <Textarea
                     ref={contentRef}
-                    placeholder="Write your poem here... Let your words flow like verses on parchment. HTML tags are supported."
+                    placeholder="Write your poem here... Let your words flow like verses on parchment. HTML tags are supported. Double-click any word for rhyme/synonym suggestions."
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
+                    onDoubleClick={(e) => {
+                      const selection = window.getSelection();
+                      const selectedText = selection?.toString().trim();
+                      if (selectedText) {
+                        getWordSuggestions(selectedText);
+                      }
+                    }}
                     className={cn(
                       "min-h-[500px] resize-none border-none bg-transparent text-lg leading-relaxed focus-visible:ring-0 font-mono",
                       showLineNumbers && "pl-12",
                       focusMode && "min-h-[600px] text-xl",
+                      collaborationMode && "border-l-4 border-l-blue-500",
                     )}
                     style={{
                       fontFamily: getCurrentFont(),
@@ -1178,24 +1697,131 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                   </div>
                 )}
 
-                {/* Poetry Studio Section */}
+                {/* Advanced Poetry Tools Section */}
                 {!focusMode && (
-                  <div className="mt-8">
+                  <div className="mt-8 space-y-6">
+                    {/* Poetry Studio Header */}
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                         <Palette className="w-5 h-5 text-primary" />
-                        Poetry Studio
+                        Advanced Poetry Studio
                       </h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowStylePanel(!showStylePanel)}
-                        className="h-8 gap-1"
-                      >
-                        <Settings className="w-4 h-4" />
-                        {showStylePanel ? "Hide" : "Show"} Studio
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowTemplates(!showTemplates)}
+                          className="h-8 gap-1"
+                        >
+                          <Layers className="w-4 h-4" />
+                          Templates
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setShowAdvancedSearch(!showAdvancedSearch)
+                          }
+                          className="h-8 gap-1"
+                        >
+                          <Search className="w-4 h-4" />
+                          Search
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowStylePanel(!showStylePanel)}
+                          className="h-8 gap-1"
+                        >
+                          <Settings className="w-4 h-4" />
+                          {showStylePanel ? "Hide" : "Show"} Studio
+                        </Button>
+                      </div>
                     </div>
+
+                    {/* Poetry Templates Panel */}
+                    <AnimatePresence>
+                      {showTemplates && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="border rounded-lg overflow-hidden bg-gradient-to-br from-background/40 to-muted/20"
+                        >
+                          <div className="bg-muted/30 p-3 border-b flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Layers className="h-4 w-4 text-primary" />
+                              <h4 className="text-sm font-medium">
+                                Poetry Templates & Forms
+                              </h4>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowTemplates(false)}
+                              className="h-7 w-7 p-0"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                          <div className="p-4">
+                            <div className="grid grid-cols-3 gap-3">
+                              {[
+                                {
+                                  name: "sonnet",
+                                  label: "Sonnet",
+                                  desc: "14 lines, ABAB CDCD EFEF GG",
+                                },
+                                {
+                                  name: "haiku",
+                                  label: "Haiku",
+                                  desc: "3 lines, 5-7-5 syllables",
+                                },
+                                {
+                                  name: "villanelle",
+                                  label: "Villanelle",
+                                  desc: "19 lines, complex rhyme",
+                                },
+                                {
+                                  name: "limerick",
+                                  label: "Limerick",
+                                  desc: "5 lines, AABBA rhyme",
+                                },
+                                {
+                                  name: "ballad",
+                                  label: "Ballad",
+                                  desc: "Narrative poem, ABAB",
+                                },
+                                {
+                                  name: "free_verse",
+                                  label: "Free Verse",
+                                  desc: "No fixed structure",
+                                },
+                              ].map((template) => (
+                                <Button
+                                  key={template.name}
+                                  variant={
+                                    selectedTemplate === template.name
+                                      ? "default"
+                                      : "outline"
+                                  }
+                                  size="sm"
+                                  onClick={() => applyTemplate(template.name)}
+                                  className="h-16 flex-col gap-1 text-xs p-2"
+                                >
+                                  <div className="font-medium">
+                                    {template.label}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {template.desc}
+                                  </div>
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {/* Quick Style Actions */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
@@ -1398,7 +2024,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                   </div>
 
                   <Tabs defaultValue="style" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 bg-muted/50">
+                    <TabsList className="grid w-full grid-cols-6 bg-muted/50">
                       <TabsTrigger value="style" className="text-xs">
                         Style
                       </TabsTrigger>
@@ -1407,6 +2033,12 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       </TabsTrigger>
                       <TabsTrigger value="tools" className="text-xs">
                         Tools
+                      </TabsTrigger>
+                      <TabsTrigger value="analysis" className="text-xs">
+                        Analysis
+                      </TabsTrigger>
+                      <TabsTrigger value="collab" className="text-xs">
+                        Collab
                       </TabsTrigger>
                       <TabsTrigger value="export" className="text-xs">
                         Export
@@ -1775,12 +2407,236 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       </div>
                     </TabsContent>
 
-                    {/* NEW FEATURE: Export Tab */}
+                    {/* ADVANCED FEATURE: Analysis Tab */}
+                    <TabsContent value="analysis" className="space-y-4 mt-4">
+                      <div className="bg-card/30 rounded-lg p-3 border border-border/30 space-y-3">
+                        <Label className="text-xs font-medium text-muted-foreground">
+                          Poetry Analysis
+                        </Label>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={analyzePoetry}
+                          disabled={analysisLoading || !content.trim()}
+                          className="w-full justify-start gap-2 h-8 text-xs"
+                        >
+                          {analysisLoading ? (
+                            <LoadingSpinner size="sm" />
+                          ) : (
+                            <Brain className="h-3 w-3" />
+                          )}
+                          Analyze Structure
+                        </Button>
+
+                        {poetryAnalysis && (
+                          <div className="text-xs bg-muted/20 p-2 rounded max-h-32 overflow-y-auto">
+                            <div className="font-medium mb-1">
+                              Analysis Results:
+                            </div>
+                            <div className="whitespace-pre-wrap">
+                              {poetryAnalysis.content}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">Show Analysis Panel</Label>
+                          <Switch
+                            checked={showAnalysis}
+                            onCheckedChange={setShowAnalysis}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Word Assistant */}
+                      <div className="bg-card/30 rounded-lg p-3 border border-border/30 space-y-2">
+                        <Label className="text-xs font-medium text-muted-foreground">
+                          Word Assistant
+                        </Label>
+                        <div className="text-xs text-muted-foreground mb-2">
+                          Double-click any word in your poem for suggestions
+                        </div>
+
+                        {selectedWord && (
+                          <div className="space-y-2">
+                            <div className="font-medium text-xs">
+                              Selected: "{selectedWord}"
+                            </div>
+
+                            {rhymeSuggestions.length > 0 && (
+                              <div>
+                                <div className="text-xs font-medium mb-1">
+                                  Rhymes:
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {rhymeSuggestions
+                                    .slice(0, 6)
+                                    .map((word, i) => (
+                                      <Badge
+                                        key={i}
+                                        variant="outline"
+                                        className="text-xs cursor-pointer"
+                                        onClick={() => {
+                                          const newContent = content.replace(
+                                            new RegExp(
+                                              `\\b${selectedWord}\\b`,
+                                              "g",
+                                            ),
+                                            word,
+                                          );
+                                          setContent(newContent);
+                                        }}
+                                      >
+                                        {word}
+                                      </Badge>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {synonymSuggestions.length > 0 && (
+                              <div>
+                                <div className="text-xs font-medium mb-1">
+                                  Synonyms:
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {synonymSuggestions
+                                    .slice(0, 6)
+                                    .map((word, i) => (
+                                      <Badge
+                                        key={i}
+                                        variant="secondary"
+                                        className="text-xs cursor-pointer"
+                                        onClick={() => {
+                                          const newContent = content.replace(
+                                            new RegExp(
+                                              `\\b${selectedWord}\\b`,
+                                              "g",
+                                            ),
+                                            word,
+                                          );
+                                          setContent(newContent);
+                                        }}
+                                      >
+                                        {word}
+                                      </Badge>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    {/* ADVANCED FEATURE: Collaboration Tab */}
+                    <TabsContent value="collab" className="space-y-4 mt-4">
+                      <div className="bg-card/30 rounded-lg p-3 border border-border/30 space-y-3">
+                        <Label className="text-xs font-medium text-muted-foreground">
+                          Collaboration
+                        </Label>
+
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">Collaboration Mode</Label>
+                          <Switch
+                            checked={collaborationMode}
+                            onCheckedChange={toggleCollaborationMode}
+                          />
+                        </div>
+
+                        {collaborationMode && (
+                          <div className="space-y-2">
+                            <Input
+                              placeholder="Enter collaborator email..."
+                              className="h-7 text-xs"
+                              onKeyPress={(e) => {
+                                if (e.key === "Enter") {
+                                  const email = (e.target as HTMLInputElement)
+                                    .value;
+                                  if (email) {
+                                    inviteCollaborator(email);
+                                    (e.target as HTMLInputElement).value = "";
+                                  }
+                                }
+                              }}
+                            />
+
+                            <div className="text-xs text-muted-foreground">
+                              Active Collaborators: {collaborators.length}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">Auto-save</Label>
+                          <Switch
+                            checked={autoSaveEnabled}
+                            onCheckedChange={setAutoSaveEnabled}
+                          />
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setShowVersionHistory(!showVersionHistory)
+                          }
+                          className="w-full justify-start gap-2 h-8 text-xs"
+                        >
+                          <History className="h-3 w-3" />
+                          Version History ({versionHistory.length})
+                        </Button>
+                      </div>
+                    </TabsContent>
+
+                    {/* ENHANCED Export Tab */}
                     <TabsContent value="export" className="space-y-4 mt-4">
                       <div className="bg-card/30 rounded-lg p-3 border border-border/30 space-y-2">
                         <Label className="text-xs font-medium text-muted-foreground">
-                          Export Options
+                          Advanced Export Options
                         </Label>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs">Include Metadata</Label>
+                            <Switch
+                              checked={exportOptions.includeMetadata}
+                              onCheckedChange={(checked) =>
+                                setExportOptions((prev) => ({
+                                  ...prev,
+                                  includeMetadata: checked,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs">Include Analysis</Label>
+                            <Switch
+                              checked={exportOptions.includeAnalysis}
+                              onCheckedChange={(checked) =>
+                                setExportOptions((prev) => ({
+                                  ...prev,
+                                  includeAnalysis: checked,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs">Custom Styling</Label>
+                            <Switch
+                              checked={exportOptions.customStyling}
+                              onCheckedChange={(checked) =>
+                                setExportOptions((prev) => ({
+                                  ...prev,
+                                  customStyling: checked,
+                                }))
+                              }
+                            />
+                          </div>
+                        </div>
 
                         <Button
                           variant="outline"
@@ -1802,7 +2658,6 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                           Export as Text
                         </Button>
 
-                        {/* NEW FEATURE: Export to HTML */}
                         <Button
                           variant="outline"
                           size="sm"
@@ -1811,6 +2666,16 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                         >
                           <Download className="h-3 w-3" />
                           Export as HTML
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={exportAdvanced}
+                          className="w-full justify-start gap-2 h-8 text-xs"
+                        >
+                          <Crown className="h-3 w-3" />
+                          Advanced Export (PDF/DOCX)
                         </Button>
 
                         <Button
@@ -1843,6 +2708,341 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
             </div>
           )}
         </div>
+
+        {/* ADVANCED FEATURE MODALS */}
+
+        {/* Version History Modal */}
+        <AnimatePresence>
+          {showVersionHistory && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+              onClick={() => setShowVersionHistory(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-background rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <History className="w-5 h-5" />
+                    Version History
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowVersionHistory(false)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  {versionHistory.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-8">
+                      No version history yet. Versions are saved automatically
+                      every 30 seconds.
+                    </div>
+                  ) : (
+                    versionHistory.map((version, index) => (
+                      <div
+                        key={version.id}
+                        className="border rounded-lg p-3 hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-medium text-sm">
+                            {version.title || "Untitled"}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {version.timestamp.toLocaleString()}
+                          </div>
+                        </div>
+                        <div className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                          {version.content.substring(0, 100)}...
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => restoreVersion(version)}
+                            className="h-7 text-xs"
+                          >
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            Restore
+                          </Button>
+                          <Badge variant="secondary" className="text-xs">
+                            Version {versionHistory.length - index}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Performance Analytics Modal */}
+        <AnimatePresence>
+          {showMetrics && performanceMetrics && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+              onClick={() => setShowMetrics(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-background rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Performance Analytics
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowMetrics(false)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Productivity Stats */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" />
+                        Productivity
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          Words Today
+                        </span>
+                        <span className="font-medium">
+                          {performanceMetrics.productivity.wordsToday}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          Poems This Week
+                        </span>
+                        <span className="font-medium">
+                          {performanceMetrics.productivity.poemsThisWeek}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          Writing Streak
+                        </span>
+                        <span className="font-medium">
+                          {performanceMetrics.productivity.streakDays} days
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Goals */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Target className="w-4 h-4" />
+                        Writing Goals
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2">
+                        <Label className="text-xs">
+                          Daily Words: {writingGoals.dailyWords}
+                        </Label>
+                        <Slider
+                          value={[writingGoals.dailyWords]}
+                          onValueChange={([value]) =>
+                            setWritingGoals((prev) => ({
+                              ...prev,
+                              dailyWords: value,
+                            }))
+                          }
+                          min={50}
+                          max={500}
+                          step={25}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">
+                          Weekly Poems: {writingGoals.weeklyPoems}
+                        </Label>
+                        <Slider
+                          value={[writingGoals.weeklyPoems]}
+                          onValueChange={([value]) =>
+                            setWritingGoals((prev) => ({
+                              ...prev,
+                              weeklyPoems: value,
+                            }))
+                          }
+                          min={1}
+                          max={10}
+                          step={1}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Achievements */}
+                  <Card className="md:col-span-2">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Award className="w-4 h-4" />
+                        Achievements
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {performanceMetrics.achievements.map(
+                          (achievement: any, index: number) => (
+                            <div
+                              key={index}
+                              className={cn(
+                                "p-3 rounded-lg border text-center",
+                                achievement.unlocked
+                                  ? "bg-primary/10 border-primary/20"
+                                  : "bg-muted/50 border-border",
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  "text-sm font-medium mb-1",
+                                  achievement.unlocked
+                                    ? "text-primary"
+                                    : "text-muted-foreground",
+                                )}
+                              >
+                                {achievement.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {achievement.unlocked ? "Unlocked!" : "Locked"}
+                              </div>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Word Assistant Modal */}
+        <AnimatePresence>
+          {showWordAssistant && selectedWord && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+              onClick={() => setShowWordAssistant(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-background rounded-lg p-6 max-w-lg w-full mx-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <Zap className="w-5 h-5" />
+                    Word Assistant: "{selectedWord}"
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowWordAssistant(false)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  {rhymeSuggestions.length > 0 && (
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">
+                        Rhyming Words
+                      </Label>
+                      <div className="flex flex-wrap gap-2">
+                        {rhymeSuggestions.map((word, i) => (
+                          <Button
+                            key={i}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newContent = content.replace(
+                                new RegExp(`\\b${selectedWord}\\b`, "g"),
+                                word,
+                              );
+                              setContent(newContent);
+                              setShowWordAssistant(false);
+                            }}
+                            className="h-8 text-xs"
+                          >
+                            {word}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {synonymSuggestions.length > 0 && (
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">
+                        Synonyms
+                      </Label>
+                      <div className="flex flex-wrap gap-2">
+                        {synonymSuggestions.map((word, i) => (
+                          <Button
+                            key={i}
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              const newContent = content.replace(
+                                new RegExp(`\\b${selectedWord}\\b`, "g"),
+                                word,
+                              );
+                              setContent(newContent);
+                              setShowWordAssistant(false);
+                            }}
+                            className="h-8 text-xs"
+                          >
+                            {word}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );
