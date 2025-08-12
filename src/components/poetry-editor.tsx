@@ -48,7 +48,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -67,10 +73,22 @@ interface PoetryEditorProps {
 // Poetry-specific presets
 const POETRY_FONTS = [
   { value: "serif", label: "Serif (Classic)", family: "Georgia, serif" },
-  { value: "cursive", label: "Cursive (Elegant)", family: "Dancing Script, cursive" },
-  { value: "monospace", label: "Monospace (Modern)", family: "Fira Code, monospace" },
+  {
+    value: "cursive",
+    label: "Cursive (Elegant)",
+    family: "Dancing Script, cursive",
+  },
+  {
+    value: "monospace",
+    label: "Monospace (Modern)",
+    family: "Fira Code, monospace",
+  },
   { value: "fantasy", label: "Fantasy (Artistic)", family: "Cinzel, fantasy" },
-  { value: "sans-serif", label: "Sans Serif (Clean)", family: "Inter, sans-serif" },
+  {
+    value: "sans-serif",
+    label: "Sans Serif (Clean)",
+    family: "Inter, sans-serif",
+  },
 ];
 
 const MOOD_PRESETS = [
@@ -79,7 +97,12 @@ const MOOD_PRESETS = [
   { value: "joyful", label: "Joyful", color: "#fef3c7", icon: Sun },
   { value: "nature", label: "Nature", color: "#dcfce7", icon: Leaf },
   { value: "mystical", label: "Mystical", color: "#e9d5ff", icon: Sparkles },
-  { value: "contemplative", label: "Contemplative", color: "#f3e8ff", icon: BookOpen },
+  {
+    value: "contemplative",
+    label: "Contemplative",
+    color: "#f3e8ff",
+    icon: BookOpen,
+  },
 ];
 
 const HISTORICAL_STYLES = [
@@ -94,22 +117,42 @@ const HISTORICAL_STYLES = [
 ];
 
 const BACKGROUND_TEXTURES = [
-  { value: "parchment", label: "Parchment", gradient: "linear-gradient(45deg, #f7f3e9, #f1ede4)" },
-  { value: "vintage", label: "Vintage Paper", gradient: "linear-gradient(45deg, #f5f1eb, #ede7d9)" },
-  { value: "modern", label: "Modern Clean", gradient: "linear-gradient(45deg, #ffffff, #f8fafc)" },
-  { value: "dark", label: "Dark Elegance", gradient: "linear-gradient(45deg, #1e293b, #334155)" },
-  { value: "cream", label: "Cream", gradient: "linear-gradient(45deg, #fefcf3, #faf8f1)" },
+  {
+    value: "parchment",
+    label: "Parchment",
+    gradient: "linear-gradient(45deg, #f7f3e9, #f1ede4)",
+  },
+  {
+    value: "vintage",
+    label: "Vintage Paper",
+    gradient: "linear-gradient(45deg, #f5f1eb, #ede7d9)",
+  },
+  {
+    value: "modern",
+    label: "Modern Clean",
+    gradient: "linear-gradient(45deg, #ffffff, #f8fafc)",
+  },
+  {
+    value: "dark",
+    label: "Dark Elegance",
+    gradient: "linear-gradient(45deg, #1e293b, #334155)",
+  },
+  {
+    value: "cream",
+    label: "Cream",
+    gradient: "linear-gradient(45deg, #fefcf3, #faf8f1)",
+  },
 ];
 
 export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
-  const { poetry, createPoetry, updatePoetry } = usePoetry();
-  
+  const { poetry, createPoetry, updatePoetry, getPoetry } = usePoetry();
+
   // Basic poem data
   const [title, setTitle] = useState("Untitled Poem");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
-  
+
   // Advanced styling
   const [style, setStyle] = useState({
     font: "serif",
@@ -123,32 +166,34 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
     uppercase: false,
     letterSpacing: 0,
   });
-  
+
   // Mood and theme
   const [mood, setMood] = useState("romantic");
   const [theme, setTheme] = useState("");
   const [backgroundTexture, setBackgroundTexture] = useState("parchment");
-  
+
   // Editor state
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [showStylePanel, setShowStylePanel] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // AI features
   const [showAIAssistant, setShowAIAssistant] = useState(false);
-  const [aiMode, setAiMode] = useState<"format" | "improve" | "rewrite" | "style" | "custom">("improve");
+  const [aiMode, setAiMode] = useState<
+    "format" | "improve" | "rewrite" | "style" | "custom"
+  >("improve");
   const [aiStyle, setAiStyle] = useState("romantic");
   const [customPrompt, setCustomPrompt] = useState("");
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  
+
   // Metadata
   const [isPublic, setIsPublic] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
-  
+
   // Refs
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -156,17 +201,46 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
   // Load existing poem data
   useEffect(() => {
     if (poemId) {
-      const existingPoem = poetry.find(p => p.id === poemId);
+      // Force refresh poetry data when editing
+      const loadPoemData = async () => {
+        try {
+          await getPoetry();
+        } catch (error) {
+          console.error("Error fetching poetry data:", error);
+        }
+      };
+
+      loadPoemData();
+    }
+  }, [poemId, getPoetry]);
+
+  // Set poem data after poetry is loaded
+  useEffect(() => {
+    if (poemId && poetry.length > 0) {
+      const existingPoem = poetry.find((p) => p.id === poemId);
       if (existingPoem) {
-        setTitle(existingPoem.title);
-        setContent(existingPoem.content);
-        setTags(existingPoem.tags);
-        setStyle(existingPoem.style);
+        console.log("Loading poem data:", existingPoem);
+        setTitle(existingPoem.title || "Untitled Poem");
+        setContent(existingPoem.content || "");
+        setTags(existingPoem.tags || []);
+        setStyle({
+          font: existingPoem.style?.font || "serif",
+          alignment: existingPoem.style?.alignment || "left",
+          lineSpacing: existingPoem.style?.lineSpacing || 1.6,
+          fontSize: existingPoem.style?.fontSize || "medium",
+          indentation: existingPoem.style?.indentation || 0,
+          stanzaSpacing: existingPoem.style?.stanzaSpacing || 1.5,
+          italics: existingPoem.style?.italics || false,
+          bold: existingPoem.style?.bold || false,
+          uppercase: existingPoem.style?.uppercase || false,
+          letterSpacing: existingPoem.style?.letterSpacing || 0,
+        });
         setMood(existingPoem.mood || "romantic");
         setTheme(existingPoem.theme || "");
-        setIsPublic(existingPoem.is_public);
-        setIsFavorite(existingPoem.is_favorite);
-        setIsPinned(existingPoem.is_pinned);
+        setIsPublic(existingPoem.is_public || false);
+        setIsFavorite(existingPoem.is_favorite || false);
+        setIsPinned(existingPoem.is_pinned || false);
+        setBackgroundTexture(existingPoem.backgroundTexture || "parchment");
       }
     }
   }, [poemId, poetry]);
@@ -188,7 +262,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
 
   const handleSave = async () => {
     setIsSaving(true);
-    
+
     const poemData = {
       title: title.trim() || "Untitled Poem",
       content: content.trim(),
@@ -224,34 +298,34 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   const getMoodColor = (moodValue: string) => {
-    const preset = MOOD_PRESETS.find(p => p.value === moodValue);
+    const preset = MOOD_PRESETS.find((p) => p.value === moodValue);
     return preset?.color || "#ffffff";
   };
 
   const getCurrentFont = () => {
-    const font = POETRY_FONTS.find(f => f.value === style.font);
+    const font = POETRY_FONTS.find((f) => f.value === style.font);
     return font?.family || "Georgia, serif";
   };
 
   const getCurrentBackground = () => {
-    const bg = BACKGROUND_TEXTURES.find(b => b.value === backgroundTexture);
+    const bg = BACKGROUND_TEXTURES.find((b) => b.value === backgroundTexture);
     return bg?.gradient || BACKGROUND_TEXTURES[0].gradient;
   };
 
   const handleAIAssist = async () => {
     if (!content.trim() && aiMode !== "custom") return;
-    
+
     setAiLoading(true);
     setAiError(null);
     setAiSuggestion("");
 
     try {
       let prompt = "";
-      
+
       switch (aiMode) {
         case "format":
           prompt = `Format this poem in the style of ${aiStyle} poetry. Apply authentic historical style, language tone, and structure. Keep the core meaning but enhance the poetic form: ${content}`;
@@ -310,40 +384,72 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
 
   const applyMoodPreset = (moodValue: string) => {
     setMood(moodValue);
-    const preset = MOOD_PRESETS.find(p => p.value === moodValue);
+    const preset = MOOD_PRESETS.find((p) => p.value === moodValue);
     if (preset) {
       // Apply mood-specific styling
       switch (moodValue) {
         case "romantic":
-          setStyle(prev => ({ ...prev, font: "cursive", alignment: "center", italics: true }));
+          setStyle((prev) => ({
+            ...prev,
+            font: "cursive",
+            alignment: "center",
+            italics: true,
+          }));
           break;
         case "melancholic":
-          setStyle(prev => ({ ...prev, font: "serif", alignment: "left", lineSpacing: 2.0 }));
+          setStyle((prev) => ({
+            ...prev,
+            font: "serif",
+            alignment: "left",
+            lineSpacing: 2.0,
+          }));
           break;
         case "joyful":
-          setStyle(prev => ({ ...prev, font: "sans-serif", alignment: "center", bold: true }));
+          setStyle((prev) => ({
+            ...prev,
+            font: "sans-serif",
+            alignment: "center",
+            bold: true,
+          }));
           break;
         case "nature":
-          setStyle(prev => ({ ...prev, font: "serif", alignment: "left", lineSpacing: 1.8 }));
+          setStyle((prev) => ({
+            ...prev,
+            font: "serif",
+            alignment: "left",
+            lineSpacing: 1.8,
+          }));
           break;
         case "mystical":
-          setStyle(prev => ({ ...prev, font: "fantasy", alignment: "center", letterSpacing: 1 }));
+          setStyle((prev) => ({
+            ...prev,
+            font: "fantasy",
+            alignment: "center",
+            letterSpacing: 1,
+          }));
           break;
         case "contemplative":
-          setStyle(prev => ({ ...prev, font: "serif", alignment: "left", lineSpacing: 1.6 }));
+          setStyle((prev) => ({
+            ...prev,
+            font: "serif",
+            alignment: "left",
+            lineSpacing: 1.6,
+          }));
           break;
       }
     }
   };
 
   const formatStanzas = () => {
-    const lines = content.split('\n');
-    const formatted = lines.map((line, index) => {
-      if (line.trim() === '' && index > 0 && index < lines.length - 1) {
-        return '\n'; // Double line break for stanza separation
-      }
-      return line;
-    }).join('\n');
+    const lines = content.split("\n");
+    const formatted = lines
+      .map((line, index) => {
+        if (line.trim() === "" && index > 0 && index < lines.length - 1) {
+          return "\n"; // Double line break for stanza separation
+        }
+        return line;
+      })
+      .join("\n");
     setContent(formatted);
   };
 
@@ -351,14 +457,16 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
     <div
       className={cn(
         "fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center",
-        isFullscreen ? "p-0" : "p-4"
+        isFullscreen ? "p-0" : "p-4",
       )}
       onClick={onClose}
     >
       <motion.div
         className={cn(
           "bg-background rounded-xl shadow-2xl overflow-hidden flex flex-col",
-          isFullscreen ? "w-full h-full rounded-none" : "w-full max-w-7xl max-h-[95vh]"
+          isFullscreen
+            ? "w-full h-full rounded-none"
+            : "w-full max-w-7xl max-h-[95vh]",
         )}
         onClick={(e) => e.stopPropagation()}
         initial={{ opacity: 0, scale: 0.95 }}
@@ -367,6 +475,8 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
         transition={{ duration: 0.3 }}
         style={{
           background: getCurrentBackground(),
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         {/* Header */}
@@ -383,7 +493,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                 onClick={() => setIsFavorite(!isFavorite)}
                 className={cn(
                   "h-8 px-3 gap-1",
-                  isFavorite && "bg-yellow-500 hover:bg-yellow-600 text-white"
+                  isFavorite && "bg-yellow-500 hover:bg-yellow-600 text-white",
                 )}
               >
                 <Star className={cn("w-4 h-4", isFavorite && "fill-current")} />
@@ -394,7 +504,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                 onClick={() => setIsPinned(!isPinned)}
                 className={cn(
                   "h-8 px-3 gap-1",
-                  isPinned && "bg-blue-500 hover:bg-blue-600 text-white"
+                  isPinned && "bg-blue-500 hover:bg-blue-600 text-white",
                 )}
               >
                 <Pin className={cn("w-4 h-4", isPinned && "fill-current")} />
@@ -405,7 +515,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                 onClick={() => setIsPublic(!isPublic)}
                 className={cn(
                   "h-8 px-3 gap-1",
-                  isPublic && "bg-green-500 hover:bg-green-600 text-white"
+                  isPublic && "bg-green-500 hover:bg-green-600 text-white",
                 )}
               >
                 <Globe className={cn("w-4 h-4", isPublic && "fill-current")} />
@@ -420,7 +530,11 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
               onClick={() => setShowPreview(!showPreview)}
               className="h-8 gap-1"
             >
-              {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPreview ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
               Preview
             </Button>
             <Button
@@ -429,7 +543,11 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
               onClick={() => setIsFullscreen(!isFullscreen)}
               className="h-8 w-8 p-0"
             >
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              {isFullscreen ? (
+                <Minimize2 className="w-4 h-4" />
+              ) : (
+                <Maximize2 className="w-4 h-4" />
+              )}
             </Button>
             <Button
               onClick={handleSave}
@@ -460,12 +578,21 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
         </div>
 
         {/* Main Content */}
-        <div className="flex flex-1 overflow-hidden">
+        <div
+          className="flex flex-1 overflow-hidden"
+          style={{ minHeight: "70vh" }}
+        >
           {/* Editor */}
-          <div className={cn(
-            "flex-1 p-6 overflow-y-auto",
-            showPreview ? "w-1/2" : "w-full"
-          )}>
+          <div
+            className={cn(
+              "flex-1 p-6 overflow-y-auto",
+              showPreview ? "w-1/2" : "w-full",
+            )}
+            style={{
+              minWidth: showPreview ? "45%" : "100%",
+              maxWidth: showPreview ? "50%" : "100%",
+            }}
+          >
             <div className="max-w-2xl mx-auto space-y-6">
               {/* Title */}
               <Input
@@ -497,20 +624,23 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
               <div className="relative">
                 <Textarea
                   ref={contentRef}
-                  placeholder="Write your poem here... Let your words flow like verses on parchment."
+                  placeholder="Write your poem here... Let your words flow like verses on parchment. HTML tags are supported."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[500px] resize-none border-none bg-transparent px-0 text-lg leading-relaxed focus-visible:ring-0"
+                  className="min-h-[500px] resize-none border-none bg-transparent px-0 text-lg leading-relaxed focus-visible:ring-0 font-mono"
                   style={{
                     fontFamily: getCurrentFont(),
                     textAlign: style.alignment as any,
                     lineHeight: style.lineSpacing,
-                    fontSize: style.fontSize === 'small' ? '1rem' 
-                      : style.fontSize === 'medium' ? '1.125rem' 
-                      : '1.25rem',
-                    fontStyle: style.italics ? 'italic' : 'normal',
-                    fontWeight: style.bold ? 'bold' : 'normal',
-                    textTransform: style.uppercase ? 'uppercase' : 'none',
+                    fontSize:
+                      style.fontSize === "small"
+                        ? "1rem"
+                        : style.fontSize === "medium"
+                          ? "1.125rem"
+                          : "1.25rem",
+                    fontStyle: style.italics ? "italic" : "normal",
+                    fontWeight: style.bold ? "bold" : "normal",
+                    textTransform: style.uppercase ? "uppercase" : "none",
                     letterSpacing: `${style.letterSpacing}px`,
                     paddingLeft: `${style.indentation * 20}px`,
                   }}
@@ -529,7 +659,9 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                     <div className="bg-muted/30 p-3 border-b flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Sparkles className="h-4 w-4 text-primary" />
-                        <h3 className="text-sm font-medium">AI Poetry Assistant</h3>
+                        <h3 className="text-sm font-medium">
+                          AI Poetry Assistant
+                        </h3>
                       </div>
                       <Button
                         variant="ghost"
@@ -545,9 +677,17 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       {/* AI Mode Selection */}
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                         {[
-                          { value: "format", label: "Format Style", icon: Type },
+                          {
+                            value: "format",
+                            label: "Format Style",
+                            icon: Type,
+                          },
                           { value: "improve", label: "Improve", icon: Wand2 },
-                          { value: "rewrite", label: "Rewrite", icon: RefreshCw },
+                          {
+                            value: "rewrite",
+                            label: "Rewrite",
+                            icon: RefreshCw,
+                          },
                           { value: "style", label: "Change Mood", icon: Heart },
                           { value: "custom", label: "Custom", icon: Pen },
                         ].map(({ value, label, icon: Icon }) => (
@@ -567,14 +707,19 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       {/* Style Selection for Format Mode */}
                       {aiMode === "format" && (
                         <div>
-                          <Label className="text-sm font-medium mb-2 block">Historical Style</Label>
+                          <Label className="text-sm font-medium mb-2 block">
+                            Historical Style
+                          </Label>
                           <Select value={aiStyle} onValueChange={setAiStyle}>
                             <SelectTrigger className="h-8">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                               {HISTORICAL_STYLES.map((style) => (
-                                <SelectItem key={style.value} value={style.value}>
+                                <SelectItem
+                                  key={style.value}
+                                  value={style.value}
+                                >
                                   {style.label}
                                 </SelectItem>
                               ))}
@@ -586,13 +731,19 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       {/* Mood Selection for Style Mode */}
                       {aiMode === "style" && (
                         <div>
-                          <Label className="text-sm font-medium mb-2 block">Target Mood</Label>
+                          <Label className="text-sm font-medium mb-2 block">
+                            Target Mood
+                          </Label>
                           <div className="grid grid-cols-3 gap-2">
                             {MOOD_PRESETS.map((preset) => (
                               <Button
                                 key={preset.value}
                                 size="sm"
-                                variant={aiStyle === preset.value ? "default" : "outline"}
+                                variant={
+                                  aiStyle === preset.value
+                                    ? "default"
+                                    : "outline"
+                                }
                                 onClick={() => setAiStyle(preset.value)}
                                 className="h-8 text-xs gap-1"
                               >
@@ -607,7 +758,9 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       {/* Custom Prompt */}
                       {aiMode === "custom" && (
                         <div>
-                          <Label className="text-sm font-medium mb-2 block">Custom Instruction</Label>
+                          <Label className="text-sm font-medium mb-2 block">
+                            Custom Instruction
+                          </Label>
                           <Input
                             placeholder="e.g., 'Write a haiku about autumn', 'Make this more melancholic', 'Add more metaphors'"
                             value={customPrompt}
@@ -622,7 +775,10 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                         <Button
                           size="sm"
                           onClick={handleAIAssist}
-                          disabled={aiLoading || (aiMode === "custom" && !customPrompt.trim())}
+                          disabled={
+                            aiLoading ||
+                            (aiMode === "custom" && !customPrompt.trim())
+                          }
                           className="h-8 gap-1 bg-gradient-to-r from-primary to-primary/80"
                         >
                           {aiLoading ? (
@@ -643,7 +799,9 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => navigator.clipboard.writeText(aiSuggestion)}
+                              onClick={() =>
+                                navigator.clipboard.writeText(aiSuggestion)
+                              }
                               className="h-8 gap-1"
                             >
                               <Copy className="h-3 w-3" />
@@ -672,7 +830,9 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       {aiSuggestion && (
                         <div className="border rounded-lg p-4 bg-background/50">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-muted-foreground">AI Suggestion</span>
+                            <span className="text-sm font-medium text-muted-foreground">
+                              AI Suggestion
+                            </span>
                             <Button
                               size="sm"
                               onClick={applyAISuggestion}
@@ -706,7 +866,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                     placeholder="Add a tag..."
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
+                    onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
                     className="flex-1 h-8"
                   />
                   <Button onClick={handleAddTag} size="sm" className="h-8">
@@ -731,13 +891,18 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
 
           {/* Live Preview */}
           {showPreview && (
-            <div className="w-1/2 border-l bg-gradient-to-br from-background/20 to-muted/10 p-6 overflow-y-auto">
+            <div
+              className="w-1/2 border-l bg-gradient-to-br from-background/20 to-muted/10 p-6 overflow-y-auto"
+              style={{ minWidth: "45%" }}
+            >
               <div className="max-w-xl mx-auto">
                 <div className="mb-4 text-center">
-                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">Live Preview</h3>
+                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                    Live Preview
+                  </h3>
                   <Separator />
                 </div>
-                
+
                 <div
                   ref={previewRef}
                   className="p-8 rounded-lg shadow-lg min-h-[500px]"
@@ -746,12 +911,15 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                     fontFamily: getCurrentFont(),
                     textAlign: style.alignment as any,
                     lineHeight: style.lineSpacing,
-                    fontSize: style.fontSize === 'small' ? '1rem' 
-                      : style.fontSize === 'medium' ? '1.125rem' 
-                      : '1.25rem',
-                    fontStyle: style.italics ? 'italic' : 'normal',
-                    fontWeight: style.bold ? 'bold' : 'normal',
-                    textTransform: style.uppercase ? 'uppercase' : 'none',
+                    fontSize:
+                      style.fontSize === "small"
+                        ? "1rem"
+                        : style.fontSize === "medium"
+                          ? "1.125rem"
+                          : "1.25rem",
+                    fontStyle: style.italics ? "italic" : "normal",
+                    fontWeight: style.bold ? "bold" : "normal",
+                    textTransform: style.uppercase ? "uppercase" : "none",
                     letterSpacing: `${style.letterSpacing}px`,
                   }}
                 >
@@ -759,19 +927,25 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                     {title || "Untitled Poem"}
                   </h1>
                   <div
-                    className="whitespace-pre-wrap"
+                    className="whitespace-pre-wrap prose prose-sm max-w-none"
                     style={{
                       paddingLeft: `${style.indentation * 20}px`,
                     }}
-                  >
-                    {content || "Your poem will appear here as you write..."}
-                  </div>
-                  
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        content || "Your poem will appear here as you write...",
+                    }}
+                  ></div>
+
                   {tags.length > 0 && (
                     <div className="mt-8 pt-4 border-t border-muted">
                       <div className="flex flex-wrap gap-1 justify-center">
                         {tags.map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
+                          <Badge
+                            key={tag}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             #{tag}
                           </Badge>
                         ))}
@@ -785,7 +959,13 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
 
           {/* Style Panel */}
           {showStylePanel && (
-            <div className="w-80 border-l bg-gradient-to-b from-background/40 to-background/20 p-4 overflow-y-auto">
+            <div
+              className="w-80 border-l bg-gradient-to-b from-background/40 to-background/20 p-4 overflow-y-auto"
+              style={{
+                minWidth: "250px",
+                display: showPreview ? "block" : "block",
+              }}
+            >
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold">Poetry Studio</h3>
@@ -809,15 +989,24 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                   <TabsContent value="style" className="space-y-4">
                     {/* Font Selection */}
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">Typography</Label>
-                      <Select value={style.font} onValueChange={(value) => setStyle({...style, font: value})}>
+                      <Label className="text-sm font-medium mb-2 block">
+                        Typography
+                      </Label>
+                      <Select
+                        value={style.font}
+                        onValueChange={(value) =>
+                          setStyle({ ...style, font: value })
+                        }
+                      >
                         <SelectTrigger className="h-8">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {POETRY_FONTS.map((font) => (
                             <SelectItem key={font.value} value={font.value}>
-                              <span style={{ fontFamily: font.family }}>{font.label}</span>
+                              <span style={{ fontFamily: font.family }}>
+                                {font.label}
+                              </span>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -826,8 +1015,15 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
 
                     {/* Font Size */}
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">Font Size</Label>
-                      <Select value={style.fontSize} onValueChange={(value) => setStyle({...style, fontSize: value})}>
+                      <Label className="text-sm font-medium mb-2 block">
+                        Font Size
+                      </Label>
+                      <Select
+                        value={style.fontSize}
+                        onValueChange={(value) =>
+                          setStyle({ ...style, fontSize: value })
+                        }
+                      >
                         <SelectTrigger className="h-8">
                           <SelectValue />
                         </SelectTrigger>
@@ -841,28 +1037,42 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
 
                     {/* Alignment */}
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">Alignment</Label>
+                      <Label className="text-sm font-medium mb-2 block">
+                        Alignment
+                      </Label>
                       <div className="flex gap-1">
                         <Button
-                          variant={style.alignment === 'left' ? 'default' : 'outline'}
+                          variant={
+                            style.alignment === "left" ? "default" : "outline"
+                          }
                           size="sm"
-                          onClick={() => setStyle({...style, alignment: 'left'})}
+                          onClick={() =>
+                            setStyle({ ...style, alignment: "left" })
+                          }
                           className="flex-1"
                         >
                           <AlignLeft className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant={style.alignment === 'center' ? 'default' : 'outline'}
+                          variant={
+                            style.alignment === "center" ? "default" : "outline"
+                          }
                           size="sm"
-                          onClick={() => setStyle({...style, alignment: 'center'})}
+                          onClick={() =>
+                            setStyle({ ...style, alignment: "center" })
+                          }
                           className="flex-1"
                         >
                           <AlignCenter className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant={style.alignment === 'right' ? 'default' : 'outline'}
+                          variant={
+                            style.alignment === "right" ? "default" : "outline"
+                          }
                           size="sm"
-                          onClick={() => setStyle({...style, alignment: 'right'})}
+                          onClick={() =>
+                            setStyle({ ...style, alignment: "right" })
+                          }
                           className="flex-1"
                         >
                           <AlignRight className="w-4 h-4" />
@@ -877,7 +1087,9 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       </Label>
                       <Slider
                         value={[style.lineSpacing]}
-                        onValueChange={([value]) => setStyle({...style, lineSpacing: value})}
+                        onValueChange={([value]) =>
+                          setStyle({ ...style, lineSpacing: value })
+                        }
                         min={1}
                         max={3}
                         step={0.1}
@@ -892,7 +1104,9 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       </Label>
                       <Slider
                         value={[style.letterSpacing]}
-                        onValueChange={([value]) => setStyle({...style, letterSpacing: value})}
+                        onValueChange={([value]) =>
+                          setStyle({ ...style, letterSpacing: value })
+                        }
                         min={-2}
                         max={5}
                         step={0.5}
@@ -907,7 +1121,9 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       </Label>
                       <Slider
                         value={[style.indentation]}
-                        onValueChange={([value]) => setStyle({...style, indentation: value})}
+                        onValueChange={([value]) =>
+                          setStyle({ ...style, indentation: value })
+                        }
                         min={0}
                         max={10}
                         step={1}
@@ -921,21 +1137,27 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                         <Label className="text-sm">Bold</Label>
                         <Switch
                           checked={style.bold}
-                          onCheckedChange={(checked) => setStyle({...style, bold: checked})}
+                          onCheckedChange={(checked) =>
+                            setStyle({ ...style, bold: checked })
+                          }
                         />
                       </div>
                       <div className="flex items-center justify-between">
                         <Label className="text-sm">Italic</Label>
                         <Switch
                           checked={style.italics}
-                          onCheckedChange={(checked) => setStyle({...style, italics: checked})}
+                          onCheckedChange={(checked) =>
+                            setStyle({ ...style, italics: checked })
+                          }
                         />
                       </div>
                       <div className="flex items-center justify-between">
                         <Label className="text-sm">Uppercase</Label>
                         <Switch
                           checked={style.uppercase}
-                          onCheckedChange={(checked) => setStyle({...style, uppercase: checked})}
+                          onCheckedChange={(checked) =>
+                            setStyle({ ...style, uppercase: checked })
+                          }
                         />
                       </div>
                     </div>
@@ -944,17 +1166,24 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                   <TabsContent value="mood" className="space-y-4">
                     {/* Mood Presets */}
                     <div>
-                      <Label className="text-sm font-medium mb-3 block">Mood Presets</Label>
+                      <Label className="text-sm font-medium mb-3 block">
+                        Mood Presets
+                      </Label>
                       <div className="grid grid-cols-2 gap-2">
                         {MOOD_PRESETS.map((preset) => (
                           <Button
                             key={preset.value}
                             size="sm"
-                            variant={mood === preset.value ? "default" : "outline"}
+                            variant={
+                              mood === preset.value ? "default" : "outline"
+                            }
                             onClick={() => applyMoodPreset(preset.value)}
                             className="h-12 flex-col gap-1 text-xs"
                             style={{
-                              backgroundColor: mood === preset.value ? preset.color : undefined,
+                              backgroundColor:
+                                mood === preset.value
+                                  ? preset.color
+                                  : undefined,
                             }}
                           >
                             <preset.icon className="h-4 w-4" />
@@ -966,14 +1195,22 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
 
                     {/* Background Texture */}
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">Background</Label>
-                      <Select value={backgroundTexture} onValueChange={setBackgroundTexture}>
+                      <Label className="text-sm font-medium mb-2 block">
+                        Background
+                      </Label>
+                      <Select
+                        value={backgroundTexture}
+                        onValueChange={setBackgroundTexture}
+                      >
                         <SelectTrigger className="h-8">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {BACKGROUND_TEXTURES.map((texture) => (
-                            <SelectItem key={texture.value} value={texture.value}>
+                            <SelectItem
+                              key={texture.value}
+                              value={texture.value}
+                            >
                               {texture.label}
                             </SelectItem>
                           ))}
@@ -983,7 +1220,9 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
 
                     {/* Theme */}
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">Theme</Label>
+                      <Label className="text-sm font-medium mb-2 block">
+                        Theme
+                      </Label>
                       <Input
                         placeholder="e.g., love, nature, loss, hope..."
                         value={theme}
@@ -1005,13 +1244,13 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                         <Quote className="h-4 w-4" />
                         Format Stanzas
                       </Button>
-                      
+
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
                           const words = content.split(/\s+/).length;
-                          const lines = content.split('\n').length;
+                          const lines = content.split("\n").length;
                           alert(`Word count: ${words}\nLine count: ${lines}`);
                         }}
                         className="w-full justify-start gap-2"
@@ -1034,11 +1273,13 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          const blob = new Blob([`${title}\n\n${content}`], { type: 'text/plain' });
+                          const blob = new Blob([`${title}\n\n${content}`], {
+                            type: "text/plain",
+                          });
                           const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
+                          const a = document.createElement("a");
                           a.href = url;
-                          a.download = `${title || 'poem'}.txt`;
+                          a.download = `${title || "poem"}.txt`;
                           a.click();
                         }}
                         className="w-full justify-start gap-2"

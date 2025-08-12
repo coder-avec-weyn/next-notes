@@ -2,7 +2,25 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, FileText, Sparkles, Star, Pin, Search, Filter, Grid3X3, List, BookOpen, Feather, Eye, Volume2, Download, Share2, Palette, Wand2 } from "lucide-react";
+import {
+  Plus,
+  FileText,
+  Sparkles,
+  Star,
+  Pin,
+  Search,
+  Filter,
+  Grid3X3,
+  List,
+  BookOpen,
+  Feather,
+  Eye,
+  Volume2,
+  Download,
+  Share2,
+  Palette,
+  Wand2,
+} from "lucide-react";
 import { usePoetry } from "@/hooks/use-poetry";
 import { PoetryEditor } from "@/components/poetry-editor";
 import { PoetryShowcase } from "@/components/poetry-showcase";
@@ -11,7 +29,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { fadeInUp, staggerContainer, staggerItem } from "@/utils/animations";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +47,9 @@ export default function PoetryPage() {
   const [filterBy, setFilterBy] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState<"grid" | "showcase">("grid");
-  const [showcaseMode, setShowcaseMode] = useState<"scroll" | "page" | "minimal">("scroll");
+  const [showcaseMode, setShowcaseMode] = useState<
+    "scroll" | "page" | "minimal"
+  >("scroll");
 
   useEffect(() => {
     getPoetry();
@@ -37,7 +63,7 @@ export default function PoetryPage() {
         return (
           poem.title.toLowerCase().includes(query) ||
           poem.content.toLowerCase().includes(query) ||
-          poem.tags.some(tag => tag.toLowerCase().includes(query)) ||
+          poem.tags.some((tag) => tag.toLowerCase().includes(query)) ||
           (poem.mood && poem.mood.toLowerCase().includes(query)) ||
           (poem.theme && poem.theme.toLowerCase().includes(query))
         );
@@ -70,14 +96,18 @@ export default function PoetryPage() {
       // Sort
       switch (sortBy) {
         case "oldest":
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          return (
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
         case "title":
           return a.title.localeCompare(b.title);
         case "mood":
           return (a.mood || "").localeCompare(b.mood || "");
         case "newest":
         default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
       }
     });
 
@@ -87,8 +117,18 @@ export default function PoetryPage() {
   };
 
   const handleEditPoem = (poemId: string) => {
-    setEditingPoemId(poemId);
-    setShowEditor(true);
+    // Force refresh poetry data before opening editor
+    getPoetry()
+      .then(() => {
+        setEditingPoemId(poemId);
+        setShowEditor(true);
+      })
+      .catch((error) => {
+        console.error("Error fetching poetry before edit:", error);
+        // Still open editor even if refresh fails
+        setEditingPoemId(poemId);
+        setShowEditor(true);
+      });
   };
 
   const handleCloseEditor = () => {
@@ -101,7 +141,9 @@ export default function PoetryPage() {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 flex items-center justify-center">
         <div className="text-center">
           <Feather className="w-16 h-16 text-purple-400 mx-auto mb-4 animate-pulse" />
-          <p className="text-lg text-gray-600">Loading your poetry collection...</p>
+          <p className="text-lg text-gray-600">
+            Loading your poetry collection...
+          </p>
         </div>
       </div>
     );
@@ -124,15 +166,18 @@ export default function PoetryPage() {
             </h1>
           </div>
           <p className="text-lg text-gray-600 max-w-2xl">
-            Create, edit, and showcase your poetry with advanced formatting tools, 
-            AI assistance, and beautiful presentation modes.
+            Create, edit, and showcase your poetry with advanced formatting
+            tools, AI assistance, and beautiful presentation modes.
           </p>
         </motion.div>
 
         {/* Enhanced Quick Actions */}
         <motion.div className="mb-8" variants={staggerItem}>
           <div className="flex flex-wrap gap-3">
-            <Button onClick={handleCreatePoem} className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+            <Button
+              onClick={handleCreatePoem}
+              className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
               <Plus className="w-4 h-4" />
               New Poem
             </Button>
@@ -226,7 +271,10 @@ export default function PoetryPage() {
             {viewMode === "showcase" && (
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-600">Mode:</span>
-                <Select value={showcaseMode} onValueChange={(value: any) => setShowcaseMode(value)}>
+                <Select
+                  value={showcaseMode}
+                  onValueChange={(value: any) => setShowcaseMode(value)}
+                >
                   <SelectTrigger className="w-32 bg-white/80 backdrop-blur-sm border-purple-200">
                     <SelectValue />
                   </SelectTrigger>
@@ -240,7 +288,8 @@ export default function PoetryPage() {
             )}
 
             <div className="text-sm text-gray-500">
-              {filteredPoetry.length} poem{filteredPoetry.length !== 1 ? 's' : ''}
+              {filteredPoetry.length} poem
+              {filteredPoetry.length !== 1 ? "s" : ""}
             </div>
           </div>
         </motion.div>
@@ -249,7 +298,7 @@ export default function PoetryPage() {
         <motion.div variants={staggerItem}>
           {filteredPoetry.length > 0 ? (
             viewMode === "showcase" ? (
-              <PoetryShowcase 
+              <PoetryShowcase
                 poems={filteredPoetry}
                 viewMode={showcaseMode}
                 showControls={true}
@@ -258,14 +307,15 @@ export default function PoetryPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredPoetry.map((poem) => (
-                  <Card 
-                    key={poem.id} 
+                  <Card
+                    key={poem.id}
                     className="hover:shadow-lg transition-all duration-300 cursor-pointer group bg-white/80 backdrop-blur-sm border-purple-200 hover:border-purple-400"
                     onClick={() => handleEditPoem(poem.id)}
-                    style={{ 
-                      background: poem.color !== '#ffffff' 
-                        ? `linear-gradient(135deg, ${poem.color}, ${poem.color}20)` 
-                        : undefined 
+                    style={{
+                      background:
+                        poem.color !== "#ffffff"
+                          ? `linear-gradient(135deg, ${poem.color}, ${poem.color}20)`
+                          : undefined,
                     }}
                   >
                     <CardHeader className="pb-3">
@@ -287,33 +337,48 @@ export default function PoetryPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <div 
-                        className="line-clamp-4 text-sm text-muted-foreground mb-4 whitespace-pre-wrap"
+                      <div
+                        className="line-clamp-4 text-sm text-muted-foreground mb-4 whitespace-pre-wrap prose prose-sm max-w-none"
                         style={{
-                          fontFamily: poem.style.font === 'serif' ? 'Georgia, serif' 
-                            : poem.style.font === 'sans-serif' ? 'Arial, sans-serif'
-                            : poem.style.font === 'monospace' ? 'monospace'
-                            : poem.style.font === 'cursive' ? 'Dancing Script, cursive'
-                            : 'Cinzel, fantasy',
+                          fontFamily:
+                            poem.style.font === "serif"
+                              ? "Georgia, serif"
+                              : poem.style.font === "sans-serif"
+                                ? "Arial, sans-serif"
+                                : poem.style.font === "monospace"
+                                  ? "monospace"
+                                  : poem.style.font === "cursive"
+                                    ? "Dancing Script, cursive"
+                                    : "Cinzel, fantasy",
                           textAlign: poem.style.alignment as any,
                           lineHeight: poem.style.lineSpacing,
-                          fontSize: poem.style.fontSize === 'small' ? '0.8rem' 
-                            : poem.style.fontSize === 'medium' ? '0.9rem' 
-                            : '1rem',
-                          fontStyle: poem.style.italics ? 'italic' : 'normal',
-                          fontWeight: poem.style.bold ? 'bold' : 'normal',
-                          textTransform: poem.style.uppercase ? 'uppercase' : 'none',
+                          fontSize:
+                            poem.style.fontSize === "small"
+                              ? "0.8rem"
+                              : poem.style.fontSize === "medium"
+                                ? "0.9rem"
+                                : "1rem",
+                          fontStyle: poem.style.italics ? "italic" : "normal",
+                          fontWeight: poem.style.bold ? "bold" : "normal",
+                          textTransform: poem.style.uppercase
+                            ? "uppercase"
+                            : "none",
                         }}
-                      >
-                        {poem.content || "No content"}
-                      </div>
-                      
+                        dangerouslySetInnerHTML={{
+                          __html: poem.content || "No content",
+                        }}
+                      />
+
                       {/* Enhanced Tags and Mood */}
                       <div className="space-y-3">
                         {poem.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {poem.tags.slice(0, 3).map((tag) => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
+                              <Badge
+                                key={tag}
+                                variant="secondary"
+                                className="text-xs"
+                              >
                                 #{tag}
                               </Badge>
                             ))}
@@ -340,7 +405,9 @@ export default function PoetryPage() {
                             )}
                           </div>
                           <div className="flex items-center gap-1">
-                            <span>{new Date(poem.created_at).toLocaleDateString()}</span>
+                            <span>
+                              {new Date(poem.created_at).toLocaleDateString()}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -353,16 +420,20 @@ export default function PoetryPage() {
             <div className="text-center py-16">
               <Feather className="w-16 h-16 text-purple-300 mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2 text-gray-700">
-                {searchQuery || filterBy !== "all" ? "No poems found" : "No poems yet"}
+                {searchQuery || filterBy !== "all"
+                  ? "No poems found"
+                  : "No poems yet"}
               </h2>
               <p className="text-gray-500 mb-6">
-                {searchQuery || filterBy !== "all" 
+                {searchQuery || filterBy !== "all"
                   ? "Try adjusting your search or filters"
-                  : "Start creating your poetry collection with our advanced editor."
-                }
+                  : "Start creating your poetry collection with our advanced editor."}
               </p>
               {!searchQuery && filterBy === "all" && (
-                <Button onClick={handleCreatePoem} className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                <Button
+                  onClick={handleCreatePoem}
+                  className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
                   <Plus className="w-4 h-4" />
                   Create your first poem
                 </Button>
@@ -374,10 +445,7 @@ export default function PoetryPage() {
 
       {/* Poetry Editor Modal */}
       {showEditor && (
-        <PoetryEditor
-          poemId={editingPoemId}
-          onClose={handleCloseEditor}
-        />
+        <PoetryEditor poemId={editingPoemId} onClose={handleCloseEditor} />
       )}
     </motion.main>
   );
