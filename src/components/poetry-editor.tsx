@@ -285,6 +285,9 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
   const [synonymSuggestions, setSynonymSuggestions] = useState<string[]>([]);
   const [selectedWord, setSelectedWord] = useState<string>("");
   const [showWordAssistant, setShowWordAssistant] = useState(false);
+  const [wordMeaning, setWordMeaning] = useState<string>("");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("english");
+  const [wordAssistantLoading, setWordAssistantLoading] = useState(false);
 
   // 5. Version History
   const [versionHistory, setVersionHistory] = useState<
@@ -582,51 +585,93 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
     }
   }, [content]);
 
-  // ADVANCED FEATURE 4: Rhyme & Synonym Assistant
-  const getWordSuggestions = useCallback(async (word: string) => {
-    if (!word.trim()) return;
+  // ADVANCED FEATURE 4: Enhanced Word Assistant with Language Support
+  const getWordSuggestions = useCallback(
+    async (word: string) => {
+      if (!word.trim()) return;
 
-    setSelectedWord(word);
-    setShowWordAssistant(true);
+      setSelectedWord(word);
+      setShowWordAssistant(true);
+      setWordAssistantLoading(true);
+      setWordMeaning("");
+      setRhymeSuggestions([]);
+      setSynonymSuggestions([]);
 
-    try {
-      // Get rhymes
-      const rhymeResponse = await fetch("/api/gemini", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: `Provide 10 words that rhyme with "${word}". Return only the words separated by commas.`,
-          type: "rhyme_suggestions",
-        }),
-      });
+      try {
+        // Get word meaning and definition
+        const meaningResponse = await fetch("/api/gemini", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: `Provide a comprehensive but concise definition and meaning of the word "${word}" in ${selectedLanguage}. Include:
+1. Primary definition
+2. Part of speech
+3. Etymology if interesting
+4. Common usage examples
+5. Any relevant synonyms or related words
 
-      if (rhymeResponse.ok) {
-        const rhymeData = await rhymeResponse.json();
-        setRhymeSuggestions(
-          rhymeData.response.split(",").map((w: string) => w.trim()),
+Keep the response under 2000 characters and make it informative yet easy to understand.`,
+            type: "word_assistant",
+          }),
+        });
+
+        if (meaningResponse.ok) {
+          const meaningData = await meaningResponse.json();
+          setWordMeaning(meaningData.response);
+        }
+
+        // Get rhymes (only for English)
+        if (selectedLanguage === "english") {
+          const rhymeResponse = await fetch("/api/gemini", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: `Provide 8 words that rhyme with "${word}". Return only the words separated by commas, no explanations.`,
+              type: "rhyme_suggestions",
+            }),
+          });
+
+          if (rhymeResponse.ok) {
+            const rhymeData = await rhymeResponse.json();
+            const rhymes = rhymeData.response
+              .split(",")
+              .map((w: string) => w.trim())
+              .filter((w: string) => w.length > 0)
+              .slice(0, 8);
+            setRhymeSuggestions(rhymes);
+          }
+        }
+
+        // Get synonyms
+        const synonymResponse = await fetch("/api/gemini", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: `Provide 8 synonyms for "${word}" in ${selectedLanguage}. Return only the words separated by commas, no explanations.`,
+            type: "synonym_suggestions",
+          }),
+        });
+
+        if (synonymResponse.ok) {
+          const synonymData = await synonymResponse.json();
+          const synonyms = synonymData.response
+            .split(",")
+            .map((w: string) => w.trim())
+            .filter((w: string) => w.length > 0)
+            .slice(0, 8);
+          setSynonymSuggestions(synonyms);
+        }
+      } catch (error) {
+        console.error("Error getting word suggestions:", error);
+        setWordMeaning(
+          "Sorry, I couldn't fetch the word meaning. Please try again.",
         );
+      } finally {
+        setWordAssistantLoading(false);
       }
-
-      // Get synonyms
-      const synonymResponse = await fetch("/api/gemini", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: `Provide 10 synonyms for "${word}". Return only the words separated by commas.`,
-          type: "synonym_suggestions",
-        }),
-      });
-
-      if (synonymResponse.ok) {
-        const synonymData = await synonymResponse.json();
-        setSynonymSuggestions(
-          synonymData.response.split(",").map((w: string) => w.trim()),
-        );
-      }
-    } catch (error) {
-      console.error("Error getting word suggestions:", error);
-    }
-  }, []);
+    },
+    [selectedLanguage],
+  );
 
   // ADVANCED FEATURE 5: Version History
   const saveVersion = useCallback(() => {
@@ -744,7 +789,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
           "First line (5 syllables)\nSecond line (7 syllables)\nThird line (5 syllables)",
       },
       villanelle: {
-        structure: "19 lines, ABA ABA ABA ABA ABA ABAA",
+        structure: "19 lines, complex rhyme",
         placeholder:
           "A1\nb\nA2\n\na\nb\nA1\n\na\nb\nA2\n\na\nb\nA1\n\na\nb\nA2\n\na\nb\nA1\nA2",
       },
@@ -1524,7 +1569,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       onClick={() => setShowAIAssistant(!showAIAssistant)}
                       className="ml-2 gap-1"
                     >
-                      <Sparkles className="h-4 w-4" />
+                      <Sparkles className="h-4 w-4 text-primary" />
                       AI Poetry Assistant
                     </Button>
                   </div>
@@ -2003,89 +2048,76 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                     </AnimatePresence>
 
                     {/* Quick Style Actions */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-                      {MOOD_PRESETS.slice(0, 6).map((preset) => (
-                        <Button
-                          key={preset.value}
-                          size="sm"
-                          variant={
-                            mood === preset.value ? "default" : "outline"
-                          }
-                          onClick={() => applyMoodPreset(preset.value)}
-                          className="h-12 flex-col gap-1 text-xs transition-all duration-200"
-                          style={{
-                            backgroundColor:
-                              mood === preset.value ? preset.color : undefined,
-                            borderColor:
-                              mood === preset.value ? preset.color : undefined,
-                          }}
-                        >
-                          <preset.icon className="h-4 w-4" />
-                          {preset.label}
-                        </Button>
-                      ))}
+                    <div className="bg-card/30 rounded-lg p-3 border border-border/30 space-y-3">
+                      <Label className="text-xs font-medium text-muted-foreground">
+                        Editor Options
+                      </Label>
+
+                      {/* NEW FEATURE: Line Numbers Toggle */}
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs flex items-center gap-2">
+                          <Hash className="w-3 h-3" />
+                          Line Numbers
+                        </Label>
+                        <Switch
+                          checked={showLineNumbers}
+                          onCheckedChange={setShowLineNumbers}
+                        />
+                      </div>
                     </div>
 
-                    {/* Typography Quick Controls */}
-                    <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 border border-border/50">
-                      <h4 className="text-sm font-medium mb-3 text-muted-foreground">
-                        Quick Typography
-                      </h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs font-medium mb-1 block">
-                            Font Style
-                          </Label>
-                          <Select
-                            value={style.font}
-                            onValueChange={(value) =>
-                              setStyle({ ...style, font: value })
-                            }
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {POETRY_FONTS.map((font) => (
-                                <SelectItem key={font.value} value={font.value}>
-                                  <span
-                                    style={{ fontFamily: font.family }}
-                                    className="text-xs"
-                                  >
-                                    {font.label}
-                                  </span>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className="text-xs font-medium mb-1 block">
-                            Alignment
-                          </Label>
-                          <div className="flex gap-1">
-                            {[
-                              { value: "left", icon: AlignLeft },
-                              { value: "center", icon: AlignCenter },
-                              { value: "right", icon: AlignRight },
-                            ].map(({ value, icon: Icon }) => (
-                              <Button
-                                key={value}
-                                variant={
-                                  style.alignment === value
-                                    ? "default"
-                                    : "outline"
-                                }
-                                size="sm"
-                                onClick={() =>
-                                  setStyle({ ...style, alignment: value })
-                                }
-                                className="flex-1 h-8 p-0"
-                              >
-                                <Icon className="w-3 h-3" />
-                              </Button>
-                            ))}
-                          </div>
+                    {/* Poetry Tools */}
+                    <div className="bg-card/30 rounded-lg p-3 border border-border/30 space-y-2">
+                      <Label className="text-xs font-medium text-muted-foreground">
+                        Poetry Tools
+                      </Label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={formatStanzas}
+                        className="w-full justify-start gap-2 h-8 text-xs"
+                      >
+                        <Quote className="h-3 w-3" />
+                        Format Stanzas
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const words = getWordCount();
+                          const lines = getLineCount();
+                          const readingTime = getReadingTime();
+                          alert(
+                            `Word count: ${words}\nLine count: ${lines}\nReading time: ${readingTime}`,
+                          );
+                        }}
+                        className="w-full justify-start gap-2 h-8 text-xs"
+                      >
+                        <BookOpen className="h-3 w-3" />
+                        Detailed Stats
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigator.clipboard.writeText(content)}
+                        className="w-full justify-start gap-2 h-8 text-xs"
+                      >
+                        <Copy className="h-3 w-3" />
+                        Copy Text
+                      </Button>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="bg-card/30 rounded-lg p-3 border border-border/30">
+                      <div className="text-xs text-muted-foreground space-y-2">
+                        <div className="font-medium">Quick Actions</div>
+                        <div className="space-y-1 text-xs">
+                          <div>⌘ + S: Save poem</div>
+                          <div>⌘ + Enter: Save & close</div>
+                          <div>Esc: Exit focus/fullscreen/close</div>
+                          <div>F11: Toggle focus mode</div>
                         </div>
                       </div>
                     </div>
@@ -2198,7 +2230,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       onClick={() => setShowStylePanel(false)}
                       className="h-7 w-7 p-0"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="w-4 h-4" />
                     </Button>
                   </div>
 
@@ -2282,46 +2314,27 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                           Alignment
                         </Label>
                         <div className="flex gap-1">
-                          <Button
-                            variant={
-                              style.alignment === "left" ? "default" : "outline"
-                            }
-                            size="sm"
-                            onClick={() =>
-                              setStyle({ ...style, alignment: "left" })
-                            }
-                            className="flex-1 h-8"
-                          >
-                            <AlignLeft className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant={
-                              style.alignment === "center"
-                                ? "default"
-                                : "outline"
-                            }
-                            size="sm"
-                            onClick={() =>
-                              setStyle({ ...style, alignment: "center" })
-                            }
-                            className="flex-1 h-8"
-                          >
-                            <AlignCenter className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant={
-                              style.alignment === "right"
-                                ? "default"
-                                : "outline"
-                            }
-                            size="sm"
-                            onClick={() =>
-                              setStyle({ ...style, alignment: "right" })
-                            }
-                            className="flex-1 h-8"
-                          >
-                            <AlignRight className="w-3 h-3" />
-                          </Button>
+                          {[
+                            { value: "left", icon: AlignLeft },
+                            { value: "center", icon: AlignCenter },
+                            { value: "right", icon: AlignRight },
+                          ].map(({ value, icon: Icon }) => (
+                            <Button
+                              key={value}
+                              variant={
+                                style.alignment === value
+                                  ? "default"
+                                  : "outline"
+                              }
+                              size="sm"
+                              onClick={() =>
+                                setStyle({ ...style, alignment: value })
+                              }
+                              className="flex-1 h-8 p-0"
+                            >
+                              <Icon className="w-3 h-3" />
+                            </Button>
+                          ))}
                         </div>
                       </div>
 
@@ -3161,7 +3174,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
           )}
         </AnimatePresence>
 
-        {/* Word Assistant Modal */}
+        {/* Enhanced Word Assistant Modal */}
         <AnimatePresence>
           {showWordAssistant && selectedWord && (
             <motion.div
@@ -3175,56 +3188,139 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-background rounded-lg p-6 max-w-lg w-full mx-4"
+                className="bg-background rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <Zap className="w-5 h-5" />
+                    <Zap className="w-5 h-5 text-primary" />
                     Word Assistant: "{selectedWord}"
                   </h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowWordAssistant(false)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={selectedLanguage}
+                      onValueChange={(value) => {
+                        setSelectedLanguage(value);
+                        // Refresh analysis with new language
+                        setTimeout(() => getWordSuggestions(selectedWord), 100);
+                      }}
+                    >
+                      <SelectTrigger className="h-8 w-32 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="english">English</SelectItem>
+                        <SelectItem value="spanish">Spanish</SelectItem>
+                        <SelectItem value="french">French</SelectItem>
+                        <SelectItem value="german">German</SelectItem>
+                        <SelectItem value="italian">Italian</SelectItem>
+                        <SelectItem value="portuguese">Portuguese</SelectItem>
+                        <SelectItem value="russian">Russian</SelectItem>
+                        <SelectItem value="chinese">Chinese</SelectItem>
+                        <SelectItem value="japanese">Japanese</SelectItem>
+                        <SelectItem value="arabic">Arabic</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowWordAssistant(false);
+                        setSelectedWord("");
+                        setWordMeaning("");
+                        setRhymeSuggestions([]);
+                        setSynonymSuggestions([]);
+                      }}
+                      className="h-8 w-8 p-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
-                  {rhymeSuggestions.length > 0 && (
-                    <div>
-                      <Label className="text-sm font-medium mb-2 block">
-                        Rhyming Words
+                <div className="space-y-6">
+                  {/* Word Meaning Section */}
+                  <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-4 border border-primary/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="text-sm font-semibold text-primary flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" />
+                        Definition & Meaning ({selectedLanguage})
                       </Label>
-                      <div className="flex flex-wrap gap-2">
-                        {rhymeSuggestions.map((word, i) => (
-                          <Button
-                            key={i}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const newContent = content.replace(
-                                new RegExp(`\\b${selectedWord}\\b`, "g"),
-                                word,
-                              );
-                              setContent(newContent);
-                              setShowWordAssistant(false);
-                            }}
-                            className="h-8 text-xs"
-                          >
-                            {word}
-                          </Button>
-                        ))}
-                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => getWordSuggestions(selectedWord)}
+                        disabled={wordAssistantLoading}
+                        className="h-7 text-xs"
+                      >
+                        {wordAssistantLoading ? (
+                          <LoadingSpinner size="sm" />
+                        ) : (
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                        )}
+                        Refresh
+                      </Button>
                     </div>
-                  )}
 
+                    {wordAssistantLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center gap-3 text-muted-foreground">
+                          <LoadingSpinner size="sm" />
+                          <span className="text-sm">
+                            Analyzing word meaning...
+                          </span>
+                        </div>
+                      </div>
+                    ) : wordMeaning ? (
+                      <div className="bg-background/50 rounded p-4 border">
+                        <div className="text-sm whitespace-pre-wrap leading-relaxed">
+                          {wordMeaning}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted-foreground py-4 text-sm">
+                        Click "Refresh" to get word analysis
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Rhyming Words (English only) */}
+                  {selectedLanguage === "english" &&
+                    rhymeSuggestions.length > 0 && (
+                      <div>
+                        <Label className="text-sm font-medium mb-3 block flex items-center gap-2">
+                          <Music className="w-4 h-4" />
+                          Rhyming Words
+                        </Label>
+                        <div className="flex flex-wrap gap-2">
+                          {rhymeSuggestions.map((word, i) => (
+                            <Button
+                              key={i}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newContent = content.replace(
+                                  new RegExp(`\\b${selectedWord}\\b`, "g"),
+                                  word,
+                                );
+                                setContent(newContent);
+                                setShowWordAssistant(false);
+                              }}
+                              className="h-8 text-xs hover:bg-primary/10 hover:border-primary/30 transition-colors"
+                              title={`Replace "${selectedWord}" with "${word}"`}
+                            >
+                              {word}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Synonyms */}
                   {synonymSuggestions.length > 0 && (
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">
+                      <Label className="text-sm font-medium mb-3 block flex items-center gap-2">
+                        <Shuffle className="w-4 h-4" />
                         Synonyms
                       </Label>
                       <div className="flex flex-wrap gap-2">
@@ -3241,7 +3337,8 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                               setContent(newContent);
                               setShowWordAssistant(false);
                             }}
-                            className="h-8 text-xs"
+                            className="h-8 text-xs hover:bg-secondary/80 transition-colors"
+                            title={`Replace "${selectedWord}" with "${word}"`}
                           >
                             {word}
                           </Button>
@@ -3249,6 +3346,47 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       </div>
                     </div>
                   )}
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <div className="text-xs text-muted-foreground">
+                      Click any suggestion to replace "{selectedWord}" in your
+                      poem
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (wordMeaning) {
+                            navigator.clipboard.writeText(
+                              `${selectedWord}: ${wordMeaning}`,
+                            );
+                            alert("Word definition copied to clipboard!");
+                          }
+                        }}
+                        disabled={!wordMeaning}
+                        className="h-8 text-xs"
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copy Definition
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => {
+                          setShowWordAssistant(false);
+                          setSelectedWord("");
+                          setWordMeaning("");
+                          setRhymeSuggestions([]);
+                          setSynonymSuggestions([]);
+                        }}
+                        className="h-8 text-xs"
+                      >
+                        Done
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>

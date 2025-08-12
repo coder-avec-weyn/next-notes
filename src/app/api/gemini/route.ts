@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEY = "AIzaSyDwjDIYVeBqtMun4PG76Jmcwg6kVw26iKc";
 const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
@@ -189,7 +189,8 @@ export async function POST(request: NextRequest) {
       // More creative for poetry assistance
       temperature = 0.8;
       maxOutputTokens = 1536;
-      systemPrompt = "You are a master poet and poetry assistant. Help with creative writing, formatting, style improvements, and poetic techniques. Be inspiring and maintain the artistic essence of poetry.";
+      systemPrompt =
+        "You are a master poet and poetry assistant. Help with creative writing, formatting, style improvements, and poetic techniques. Be inspiring and maintain the artistic essence of poetry.";
     } else if (type === "writing_assistant") {
       // More precise for writing assistance
       temperature = 0.4;
@@ -198,6 +199,12 @@ export async function POST(request: NextRequest) {
       // Conversational and helpful
       temperature = 0.8;
       maxOutputTokens = 1024;
+    } else if (type === "word_assistant") {
+      // Precise for word definitions and meanings
+      temperature = 0.3;
+      maxOutputTokens = 512;
+      systemPrompt =
+        "You are a linguistic expert and dictionary assistant. Provide clear, concise, and accurate definitions and meanings of words. Keep responses under 2000 characters and focus on the most relevant meanings and usage examples.";
     }
 
     // Prepare the request to Gemini API
@@ -206,7 +213,9 @@ export async function POST(request: NextRequest) {
         {
           parts: [
             {
-              text: systemPrompt ? `${systemPrompt}\n\n${truncatedPrompt}` : truncatedPrompt,
+              text: systemPrompt
+                ? `${systemPrompt}\n\n${truncatedPrompt}`
+                : truncatedPrompt,
             },
           ],
         },
