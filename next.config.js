@@ -7,7 +7,7 @@ try {
     dest: "public",
     register: false, // We're handling registration manually in layout.tsx
     skipWaiting: true,
-    disable: false, // Enable in development for testing
+    disable: process.env.NODE_ENV === "development", // Disable in development to avoid conflicts
     // Enhanced caching strategy
     runtimeCaching: [
       {

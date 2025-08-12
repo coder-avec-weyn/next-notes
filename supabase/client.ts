@@ -21,7 +21,10 @@ export const createClient = () => {
     }
 
     // Validate API key format (basic check)
-    if (!supabaseAnonKey.startsWith("eyJ")) {
+    if (
+      typeof supabaseAnonKey !== "string" ||
+      supabaseAnonKey.length < 10 // Simple length check instead of specific format
+    ) {
       console.error("Invalid Supabase API key format");
       return null;
     }

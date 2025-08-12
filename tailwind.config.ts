@@ -79,20 +79,7 @@ const config = {
       },
     },
   },
-  plugins: [
-    require("tailwindcss-animate"),
-    ...(() => {
-      try {
-        return [require("@tailwindcss/typography")];
-      } catch (error) {
-        console.warn(
-          "@tailwindcss/typography not found, typography features will be disabled:",
-          error.message,
-        );
-        return [];
-      }
-    })(),
-  ],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;
 
 export default config;
