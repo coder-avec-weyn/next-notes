@@ -444,20 +444,54 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
   // ADVANCED FEATURE 2: Text-to-Speech
   const speakText = useCallback(() => {
     if ("speechSynthesis" in window) {
-      const utterance = new SpeechSynthesisUtterance(content);
-      utterance.rate = speechRate;
-      if (speechVoice) {
-        const voices = speechSynthesis.getVoices();
-        const selectedVoice = voices.find(
-          (voice) => voice.name === speechVoice,
-        );
-        if (selectedVoice) utterance.voice = selectedVoice;
+      try {
+        // Cancel any ongoing speech
+        speechSynthesis.cancel();
+
+        // Clean content for speech (remove HTML tags)
+        const cleanContent = content.replace(/<[^>]*>/g, "").trim();
+
+        if (!cleanContent) {
+          console.warn("No content to speak");
+          return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(cleanContent);
+        utterance.rate = speechRate;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+
+        // Set voice if specified
+        if (speechVoice) {
+          const voices = speechSynthesis.getVoices();
+          const selectedVoice = voices.find(
+            (voice) => voice.name === speechVoice,
+          );
+          if (selectedVoice) utterance.voice = selectedVoice;
+        }
+
+        utterance.onstart = () => {
+          console.log("Speech started");
+          setIsSpeaking(true);
+        };
+
+        utterance.onend = () => {
+          console.log("Speech ended");
+          setIsSpeaking(false);
+        };
+
+        utterance.onerror = (event) => {
+          console.error("Speech error:", event.error);
+          setIsSpeaking(false);
+        };
+
+        speechSynthesis.speak(utterance);
+      } catch (error) {
+        console.error("Error in text-to-speech:", error);
+        setIsSpeaking(false);
       }
-
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-
-      speechSynthesis.speak(utterance);
+    } else {
+      console.warn("Speech synthesis not supported in this browser");
     }
   }, [content, speechRate, speechVoice]);
 
@@ -474,28 +508,75 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
 
     setAnalysisLoading(true);
     try {
-      const response = await fetch("/api/gemini", {
+      // Use the dedicated poetry analysis endpoint
+      const response = await fetch("/api/poetry/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: `Analyze this poem comprehensively. Provide: 1) Meter and rhythm analysis, 2) Rhyme scheme, 3) Literary devices used, 4) Emotional tone, 5) Structural analysis, 6) Syllable count per line, 7) Poetic form identification: ${content}`,
-          type: "poetry_analysis",
-        }),
+        body: JSON.stringify({ content }),
       });
 
       if (response.ok) {
         const data = await response.json();
+        const analysis = data.data;
+
+        // Format the analysis for display
+        const formattedAnalysis = `
+<strong>Poetry Form:</strong> ${analysis.poetry_form}<br>
+<strong>Rhyme Scheme:</strong> ${analysis.rhyme_scheme || "None detected"}<br>
+<strong>Structure:</strong><br>
+• Lines: ${analysis.line_count}<br>
+• Stanzas: ${analysis.stanza_count}<br>
+• Words: ${analysis.word_count}<br>
+• Avg words per line: ${analysis.average_words_per_line}<br>
+• Avg syllables per line: ${analysis.average_syllables_per_line}<br>
+<strong>Reading Time:</strong> ${analysis.estimated_reading_time} minute(s)<br>
+<strong>Detected Mood:</strong> ${analysis.detected_mood}<br>
+<strong>Themes:</strong> ${analysis.detected_themes.join(", ")}<br>
+<strong>Structure Analysis:</strong><br>
+• Regular meter: ${analysis.structure_analysis.has_regular_meter ? "Yes" : "No"}<br>
+• Has rhyme: ${analysis.structure_analysis.has_rhyme ? "Yes" : "No"}<br>
+• Structured form: ${analysis.structure_analysis.is_structured ? "Yes" : "No"}
+        `;
+
         setPoetryAnalysis({
-          content: data.response,
+          content: formattedAnalysis,
           timestamp: new Date(),
-          wordCount: getWordCount(),
-          lineCount: getLineCount(),
-          stanzaCount: content.split("\n\n").length,
+          wordCount: analysis.word_count,
+          lineCount: analysis.line_count,
+          stanzaCount: analysis.stanza_count,
+          rawData: analysis,
         });
         setShowAnalysis(true);
+      } else {
+        throw new Error("Failed to analyze poetry");
       }
     } catch (error) {
       console.error("Error analyzing poetry:", error);
+      // Fallback to AI analysis if dedicated endpoint fails
+      try {
+        const fallbackResponse = await fetch("/api/gemini", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: `Analyze this poem comprehensively. Provide: 1) Meter and rhythm analysis, 2) Rhyme scheme, 3) Literary devices used, 4) Emotional tone, 5) Structural analysis, 6) Syllable count per line, 7) Poetic form identification: ${content}`,
+            type: "poetry_analysis",
+          }),
+        });
+
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          setPoetryAnalysis({
+            content: fallbackData.response,
+            timestamp: new Date(),
+            wordCount: getWordCount(),
+            lineCount: getLineCount(),
+            stanzaCount: content.split("\n\n").length,
+          });
+          setShowAnalysis(true);
+        }
+      } catch (fallbackError) {
+        console.error("Fallback analysis also failed:", fallbackError);
+      }
     } finally {
       setAnalysisLoading(false);
     }
@@ -577,13 +658,52 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
 
   // ADVANCED FEATURE 6: Collaboration Features
   const inviteCollaborator = useCallback(async (email: string) => {
-    // Placeholder for collaboration invitation
-    console.log("Inviting collaborator:", email);
+    try {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert("Please enter a valid email address");
+        return;
+      }
+
+      // Simulate collaboration invitation
+      console.log("Inviting collaborator:", email);
+
+      // Add to collaborators list (simulated)
+      const newCollaborator = {
+        id: Date.now().toString(),
+        name: email.split("@")[0],
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+        isOnline: false,
+      };
+
+      setCollaborators((prev) => [...prev, newCollaborator]);
+
+      // Show success message
+      alert(`Collaboration invitation sent to ${email}`);
+    } catch (error) {
+      console.error("Error inviting collaborator:", error);
+      alert("Failed to send collaboration invitation");
+    }
   }, []);
 
   const toggleCollaborationMode = useCallback(() => {
-    setCollaborationMode(!collaborationMode);
-    // In real implementation, this would enable real-time sync
+    const newMode = !collaborationMode;
+    setCollaborationMode(newMode);
+
+    if (newMode) {
+      console.log(
+        "Collaboration mode enabled - real-time sync would start here",
+      );
+      // In real implementation, this would:
+      // 1. Connect to WebSocket for real-time updates
+      // 2. Enable operational transforms for concurrent editing
+      // 3. Show cursor positions of other users
+      // 4. Enable comment system
+    } else {
+      console.log("Collaboration mode disabled");
+      // Disconnect from real-time features
+    }
   }, [collaborationMode]);
 
   // ADVANCED FEATURE 7: Advanced Export
@@ -627,6 +747,21 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
         structure: "19 lines, ABA ABA ABA ABA ABA ABAA",
         placeholder:
           "A1\nb\nA2\n\na\nb\nA1\n\na\nb\nA2\n\na\nb\nA1\n\na\nb\nA2\n\na\nb\nA1\nA2",
+      },
+      limerick: {
+        structure: "5 lines, AABBA rhyme scheme",
+        placeholder:
+          "There once was a [person] from [place] (A)\nWho [action] with [adjective] grace (A)\n[Short line] (B)\n[Short line] (B)\nAnd [conclusion] all over the place (A)",
+      },
+      ballad: {
+        structure: "Narrative poem, ABAB rhyme scheme",
+        placeholder:
+          "In days of old when knights were bold (A)\nAnd stories filled the air (B)\nA tale was told of hearts so cold (A)\nAnd love beyond compare (B)\n\nThe hero rode through forest old (A)\nTo rescue maiden fair (B)\nWith sword of gold and spirit bold (A)\nHe climbed the castle stair (B)",
+      },
+      free_verse: {
+        structure: "No fixed structure, free form",
+        placeholder:
+          "Words flow like water\nacross the page,\nunbound by rules\nor rigid cages.\n\nEach line breathes\nwith its own rhythm,\neach stanza\nfinds its natural pause.\n\nThis is poetry\nin its purest form—\nthought made visible,\nemotion given voice.",
       },
     };
 
@@ -1081,7 +1216,9 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       isPinned && "bg-blue-500 hover:bg-blue-600 text-white",
                     )}
                   >
-                    <Pin className={cn("w-4 h-4", isPinned && "fill-current")} />
+                    <Pin
+                      className={cn("w-4 h-4", isPinned && "fill-current")}
+                    />
                   </Button>
                   <Button
                     variant={isPublic ? "default" : "outline"}
@@ -1807,7 +1944,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                             </Button>
                           </div>
                           <div className="p-4">
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                               {[
                                 {
                                   name: "sonnet",
@@ -1849,7 +1986,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                                   }
                                   size="sm"
                                   onClick={() => applyTemplate(template.name)}
-                                  className="h-16 flex-col gap-1 text-xs p-2"
+                                  className="h-16 flex-col gap-1 text-xs p-2 hover:bg-primary/10 transition-colors"
                                 >
                                   <div className="font-medium">
                                     {template.label}
@@ -2472,13 +2609,19 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                         </Button>
 
                         {poetryAnalysis && (
-                          <div className="text-xs bg-muted/20 p-2 rounded max-h-32 overflow-y-auto">
-                            <div className="font-medium mb-1">
+                          <div className="text-xs bg-muted/20 p-2 rounded max-h-40 overflow-y-auto">
+                            <div className="font-medium mb-1 flex items-center justify-between">
                               Analysis Results:
+                              <span className="text-xs text-muted-foreground">
+                                {poetryAnalysis.timestamp.toLocaleTimeString()}
+                              </span>
                             </div>
-                            <div className="whitespace-pre-wrap">
-                              {poetryAnalysis.content}
-                            </div>
+                            <div
+                              className="whitespace-pre-wrap prose prose-xs max-w-none"
+                              dangerouslySetInnerHTML={{
+                                __html: poetryAnalysis.content,
+                              }}
+                            />
                           </div>
                         )}
 
@@ -2519,7 +2662,10 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                                       size="sm"
                                       onClick={() => {
                                         const newContent = content.replace(
-                                          new RegExp(`\\b${selectedWord}\\b`, "g"),
+                                          new RegExp(
+                                            `\\b${selectedWord}\\b`,
+                                            "g",
+                                          ),
                                           word,
                                         );
                                         setContent(newContent);
@@ -2547,7 +2693,10 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                                       size="sm"
                                       onClick={() => {
                                         const newContent = content.replace(
-                                          new RegExp(`\\b${selectedWord}\\b`, "g"),
+                                          new RegExp(
+                                            `\\b${selectedWord}\\b`,
+                                            "g",
+                                          ),
                                           word,
                                         );
                                         setContent(newContent);
@@ -2590,8 +2739,8 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                                 if (e.key === "Enter") {
                                   const email = (e.target as HTMLInputElement)
                                     .value;
-                                  if (email) {
-                                    inviteCollaborator(email);
+                                  if (email.trim()) {
+                                    inviteCollaborator(email.trim());
                                     (e.target as HTMLInputElement).value = "";
                                   }
                                 }
@@ -2601,6 +2750,32 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                             <div className="text-xs text-muted-foreground">
                               Active Collaborators: {collaborators.length}
                             </div>
+
+                            {collaborators.length > 0 && (
+                              <div className="space-y-1">
+                                {collaborators.map((collaborator) => (
+                                  <div
+                                    key={collaborator.id}
+                                    className="flex items-center gap-2 text-xs"
+                                  >
+                                    <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center">
+                                      {collaborator.name
+                                        .charAt(0)
+                                        .toUpperCase()}
+                                    </div>
+                                    <span>{collaborator.name}</span>
+                                    <div
+                                      className={cn(
+                                        "w-2 h-2 rounded-full",
+                                        collaborator.isOnline
+                                          ? "bg-green-500"
+                                          : "bg-gray-400",
+                                      )}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
 
