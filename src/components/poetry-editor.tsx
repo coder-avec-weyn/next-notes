@@ -610,7 +610,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
 4. Common usage examples
 5. Any relevant synonyms or related words
 
-Keep the response under 2000 characters and make it informative yet easy to understand.`,
+Format your response using HTML tags for better readability (use <strong>, <em>, <br>, <p>, etc.). Keep the response under 2000 characters and make it informative yet easy to understand.`,
             type: "word_assistant",
           }),
         });
@@ -971,9 +971,10 @@ Keep the response under 2000 characters and make it informative yet easy to unde
     }
   }, [poemId, poetry]);
 
-  // Handle escape key
+  // Handle keyboard shortcuts
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Handle Escape key
       if (e.key === "Escape") {
         if (focusMode) {
           setFocusMode(false);
@@ -982,13 +983,36 @@ Keep the response under 2000 characters and make it informative yet easy to unde
         } else {
           onClose();
         }
+        return;
+      }
+
+      // Handle F11 for focus mode
+      if (e.key === "F11") {
+        e.preventDefault();
+        setFocusMode(!focusMode);
+        return;
+      }
+
+      // Handle Cmd/Ctrl + S for save
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        handleSave();
+        return;
+      }
+
+      // Handle Cmd/Ctrl + Enter for save & close
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        handleSave();
+        return;
       }
     };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isFullscreen, focusMode, onClose]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setIsSaving(true);
 
     const poemData = {
@@ -1016,7 +1040,21 @@ Keep the response under 2000 characters and make it informative yet easy to unde
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [
+    title,
+    content,
+    tags,
+    style,
+    mood,
+    theme,
+    isPublic,
+    isFavorite,
+    isPinned,
+    poemId,
+    updatePoetry,
+    createPoetry,
+    onClose,
+  ]);
 
   const handleAddTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -2114,8 +2152,8 @@ Keep the response under 2000 characters and make it informative yet easy to unde
                       <div className="text-xs text-muted-foreground space-y-2">
                         <div className="font-medium">Quick Actions</div>
                         <div className="space-y-1 text-xs">
-                          <div>⌘ + S: Save poem</div>
-                          <div>⌘ + Enter: Save & close</div>
+                          <div>⌘/Ctrl + S: Save poem</div>
+                          <div>⌘/Ctrl + Enter: Save & close</div>
                           <div>Esc: Exit focus/fullscreen/close</div>
                           <div>F11: Toggle focus mode</div>
                         </div>
@@ -2590,8 +2628,8 @@ Keep the response under 2000 characters and make it informative yet easy to unde
                         <div className="text-xs text-muted-foreground space-y-2">
                           <div className="font-medium">Quick Actions</div>
                           <div className="space-y-1 text-xs">
-                            <div>⌘ + S: Save poem</div>
-                            <div>⌘ + Enter: Save & close</div>
+                            <div>⌘/Ctrl + S: Save poem</div>
+                            <div>⌘/Ctrl + Enter: Save & close</div>
                             <div>Esc: Exit focus/fullscreen/close</div>
                             <div>F11: Toggle focus mode</div>
                           </div>
@@ -2664,7 +2702,8 @@ Keep the response under 2000 characters and make it informative yet easy to unde
 
                             {rhymeSuggestions.length > 0 && (
                               <div>
-                                <Label className="text-xs font-medium mb-2 block">
+                                <Label className="text-xs font-medium mb-2 block flex items-center gap-2">
+                                  <Music className="w-4 h-4" />
                                   Rhyming Words
                                 </Label>
                                 <div className="flex flex-wrap gap-2">
@@ -2684,7 +2723,8 @@ Keep the response under 2000 characters and make it informative yet easy to unde
                                         setContent(newContent);
                                         setShowWordAssistant(false);
                                       }}
-                                      className="h-8 text-xs"
+                                      className="h-8 text-xs hover:bg-primary/10 hover:border-primary/30 transition-colors"
+                                      title={`Replace "${selectedWord}" with "${word}"`}
                                     >
                                       {word}
                                     </Button>
@@ -2695,7 +2735,8 @@ Keep the response under 2000 characters and make it informative yet easy to unde
 
                             {synonymSuggestions.length > 0 && (
                               <div>
-                                <Label className="text-xs font-medium mb-2 block">
+                                <Label className="text-xs font-medium mb-3 block flex items-center gap-2">
+                                  <Shuffle className="w-4 h-4" />
                                   Synonyms
                                 </Label>
                                 <div className="flex flex-wrap gap-2">
@@ -2715,7 +2756,8 @@ Keep the response under 2000 characters and make it informative yet easy to unde
                                         setContent(newContent);
                                         setShowWordAssistant(false);
                                       }}
-                                      className="h-8 text-xs"
+                                      className="h-8 text-xs hover:bg-secondary/80 transition-colors"
+                                      title={`Replace "${selectedWord}" with "${word}"`}
                                     >
                                       {word}
                                     </Button>
@@ -3273,9 +3315,10 @@ Keep the response under 2000 characters and make it informative yet easy to unde
                       </div>
                     ) : wordMeaning ? (
                       <div className="bg-background/50 rounded p-4 border">
-                        <div className="text-sm whitespace-pre-wrap leading-relaxed">
-                          {wordMeaning}
-                        </div>
+                        <div
+                          className="text-sm whitespace-pre-wrap leading-relaxed prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: wordMeaning }}
+                        />
                       </div>
                     ) : (
                       <div className="text-center text-muted-foreground py-4 text-sm">
