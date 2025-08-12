@@ -96,8 +96,6 @@ import {
   Orbit,
   Rocket,
   Satellite,
-  Gamepad2,
-  Joystick,
   Dice1,
   Dice2,
   Dice3,
@@ -1049,148 +1047,219 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
           flexDirection: "column",
         }}
       >
-        {/* Header */}
+        {/* Header - Improved with better spacing and organization */}
         {!focusMode && (
-          <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b bg-background/80 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <Feather className="w-6 h-6 text-primary" />
-              <h2 className="text-xl font-semibold">
-                {poemId ? "Edit Poem" : "Create New Poem"}
-              </h2>
+          <div className="sticky top-0 z-10 flex flex-col border-b bg-background/80 backdrop-blur-sm">
+            {/* Main Header Row */}
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <Feather className="w-6 h-6 text-primary" />
+                <h2 className="text-xl font-semibold">
+                  {poemId ? "Edit Poem" : "Create New Poem"}
+                </h2>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={isFavorite ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setIsFavorite(!isFavorite)}
+                    className={cn(
+                      "h-8 px-3 gap-1",
+                      isFavorite &&
+                        "bg-yellow-500 hover:bg-yellow-600 text-white",
+                    )}
+                  >
+                    <Star
+                      className={cn("w-4 h-4", isFavorite && "fill-current")}
+                    />
+                  </Button>
+                  <Button
+                    variant={isPinned ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setIsPinned(!isPinned)}
+                    className={cn(
+                      "h-8 px-3 gap-1",
+                      isPinned && "bg-blue-500 hover:bg-blue-600 text-white",
+                    )}
+                  >
+                    <Pin className={cn("w-4 h-4", isPinned && "fill-current")} />
+                  </Button>
+                  <Button
+                    variant={isPublic ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setIsPublic(!isPublic)}
+                    className={cn(
+                      "h-8 px-3 gap-1",
+                      isPublic && "bg-green-500 hover:bg-green-600 text-white",
+                    )}
+                  >
+                    <Globe
+                      className={cn("w-4 h-4", isPublic && "fill-current")}
+                    />
+                  </Button>
+                </div>
+              </div>
+
               <div className="flex items-center gap-2">
-                <Button
-                  variant={isFavorite ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setIsFavorite(!isFavorite)}
-                  className={cn(
-                    "h-8 px-3 gap-1",
-                    isFavorite &&
-                      "bg-yellow-500 hover:bg-yellow-600 text-white",
+                {/* Enhanced stats with new features */}
+                <div className="hidden md:flex items-center gap-4 text-sm text-muted-foreground bg-muted/30 px-3 py-1 rounded-lg">
+                  <div className="flex items-center gap-1">
+                    <FileText className="w-3 h-3" />
+                    {getWordCount()} words
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Hash className="w-3 h-3" />
+                    {getLineCount()} lines
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {getReadingTime()}
+                  </div>
+                  {collaborationMode && (
+                    <div className="flex items-center gap-1">
+                      <Users className="w-3 h-3" />
+                      {collaborators.length} collaborators
+                    </div>
                   )}
+                  {autoSaveEnabled && (
+                    <div className="flex items-center gap-1 text-green-500">
+                      <Save className="w-3 h-3" />
+                      Auto-save
+                    </div>
+                  )}
+                </div>
+
+                <Button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="h-8 gap-2 bg-primary hover:bg-primary/90"
                 >
-                  <Star
-                    className={cn("w-4 h-4", isFavorite && "fill-current")}
-                  />
+                  {isSaving ? (
+                    <>
+                      <LoadingSpinner size="sm" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save
+                    </>
+                  )}
                 </Button>
                 <Button
-                  variant={isPinned ? "default" : "outline"}
+                  variant="ghost"
                   size="sm"
-                  onClick={() => setIsPinned(!isPinned)}
-                  className={cn(
-                    "h-8 px-3 gap-1",
-                    isPinned && "bg-blue-500 hover:bg-blue-600 text-white",
-                  )}
+                  onClick={onClose}
+                  className="h-8 w-8 p-0"
                 >
-                  <Pin className={cn("w-4 h-4", isPinned && "fill-current")} />
-                </Button>
-                <Button
-                  variant={isPublic ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setIsPublic(!isPublic)}
-                  className={cn(
-                    "h-8 px-3 gap-1",
-                    isPublic && "bg-green-500 hover:bg-green-600 text-white",
-                  )}
-                >
-                  <Globe
-                    className={cn("w-4 h-4", isPublic && "fill-current")}
-                  />
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Enhanced stats with new features */}
-              <div className="flex items-center gap-4 text-sm text-muted-foreground bg-muted/30 px-3 py-1 rounded-lg">
-                <div className="flex items-center gap-1">
-                  <FileText className="w-3 h-3" />
-                  {getWordCount()} words
-                </div>
-                <div className="flex items-center gap-1">
-                  <Hash className="w-3 h-3" />
-                  {getLineCount()} lines
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {getReadingTime()}
-                </div>
-                {collaborationMode && (
-                  <div className="flex items-center gap-1">
-                    <Users className="w-3 h-3" />
-                    {collaborators.length} collaborators
-                  </div>
-                )}
-                {autoSaveEnabled && (
-                  <div className="flex items-center gap-1 text-green-500">
-                    <Save className="w-3 h-3" />
-                    Auto-save
-                  </div>
-                )}
+            {/* Toolbar Row - Organized into logical groups with proper spacing */}
+            <div className="flex flex-wrap items-center gap-1 px-4 pb-2 overflow-x-auto">
+              {/* View Controls Group */}
+              <div className="flex items-center gap-1 p-1 bg-muted/20 rounded-md">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFocusMode(!focusMode)}
+                  className="h-8 gap-1"
+                  title="Focus Mode"
+                >
+                  <Focus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Focus</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="h-8 gap-1"
+                  title="Toggle Preview"
+                >
+                  {showPreview ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                  <span className="hidden sm:inline">Preview</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="h-8 w-8 p-0"
+                  title="Toggle Fullscreen"
+                >
+                  {isFullscreen ? (
+                    <Minimize2 className="w-4 h-4" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4" />
+                  )}
+                </Button>
               </div>
 
-              {/* ADVANCED FEATURE BUTTONS */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowMetrics(!showMetrics)}
-                className="h-8 gap-1"
-              >
-                <BarChart3 className="w-4 h-4" />
-                Analytics
-              </Button>
+              {/* Analysis Group */}
+              <div className="flex items-center gap-1 p-1 bg-muted/20 rounded-md">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowMetrics(!showMetrics)}
+                  className="h-8 gap-1"
+                  title="Analytics"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Analytics</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={analyzePoetry}
+                  disabled={analysisLoading}
+                  className="h-8 gap-1"
+                  title="Analyze Poetry"
+                >
+                  {analysisLoading ? (
+                    <LoadingSpinner size="sm" />
+                  ) : (
+                    <Brain className="w-4 h-4" />
+                  )}
+                  <span className="hidden sm:inline">Analyze</span>
+                </Button>
+              </div>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowVersionHistory(!showVersionHistory)}
-                className="h-8 gap-1"
-              >
-                <History className="w-4 h-4" />
-                Versions
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={analyzePoetry}
-                disabled={analysisLoading}
-                className="h-8 gap-1"
-              >
-                {analysisLoading ? (
-                  <LoadingSpinner size="sm" />
-                ) : (
-                  <Brain className="w-4 h-4" />
-                )}
-                Analyze
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowCollaboration(!showCollaboration)}
-                className="h-8 gap-1"
-              >
-                <Users className="w-4 h-4" />
-                Collaborate
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setFocusMode(!focusMode)}
-                className="h-8 gap-1"
-              >
-                <Focus className="w-4 h-4" />
-                Focus
-              </Button>
+              {/* Collaboration Group */}
+              <div className="flex items-center gap-1 p-1 bg-muted/20 rounded-md">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowVersionHistory(!showVersionHistory)}
+                  className="h-8 gap-1"
+                  title="Version History"
+                >
+                  <History className="w-4 h-4" />
+                  <span className="hidden sm:inline">Versions</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowCollaboration(!showCollaboration)}
+                  className="h-8 gap-1"
+                  title="Collaboration"
+                >
+                  <Users className="w-4 h-4" />
+                  <span className="hidden sm:inline">Collaborate</span>
+                </Button>
+              </div>
 
               {/* Voice & Audio Controls */}
-              <div className="flex items-center gap-1 border-l pl-2">
+              <div className="flex items-center gap-1 p-1 bg-muted/20 rounded-md">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={isRecording ? stopRecording : startRecording}
                   className={cn("h-8 w-8 p-0", isRecording && "text-red-500")}
+                  title={isRecording ? "Stop Recording" : "Start Recording"}
                 >
                   {isRecording ? (
                     <MicOff className="w-4 h-4" />
@@ -1198,13 +1267,13 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                     <Mic className="w-4 h-4" />
                   )}
                 </Button>
-
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={isSpeaking ? stopSpeaking : speakText}
                   disabled={!content.trim()}
                   className={cn("h-8 w-8 p-0", isSpeaking && "text-blue-500")}
+                  title={isSpeaking ? "Stop Speaking" : "Text to Speech"}
                 >
                   {isSpeaking ? (
                     <Pause className="w-4 h-4" />
@@ -1214,61 +1283,34 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                 </Button>
               </div>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowPreview(!showPreview)}
-                className="h-8 gap-1"
-              >
-                {showPreview ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-                Preview
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                className="h-8 w-8 p-0"
-              >
-                {isFullscreen ? (
-                  <Minimize2 className="w-4 h-4" />
-                ) : (
-                  <Maximize2 className="w-4 h-4" />
-                )}
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="h-8 gap-2 bg-primary hover:bg-primary/90"
-              >
-                {isSaving ? (
-                  <>
-                    <LoadingSpinner size="sm" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Save
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="h-8 w-8 p-0"
-              >
-                <X className="w-4 h-4" />
-              </Button>
+              {/* AI Assistant */}
+              <div className="flex items-center gap-1 ml-auto">
+                <Button
+                  variant={showAIAssistant ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setShowAIAssistant(!showAIAssistant)}
+                  className="h-8 gap-1"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span className="hidden sm:inline">AI Assistant</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowStylePanel(!showStylePanel)}
+                  className="h-8 gap-1"
+                >
+                  <Settings className="w-4 h-4" />
+                  <span className="hidden sm:inline">
+                    {showStylePanel ? "Hide" : "Show"} Studio
+                  </span>
+                </Button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Focus Mode Header */}
+        {/* Focus Mode Header - Improved positioning */}
         {focusMode && (
           <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
             <Button
@@ -1282,7 +1324,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
           </div>
         )}
 
-        {/* Main Content */}
+        {/* Main Content - Improved layout with consistent spacing */}
         <div
           className="flex flex-1 overflow-hidden"
           style={{ minHeight: "70vh" }}
@@ -1315,20 +1357,20 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                     : "100%",
             }}
           >
-            {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-background/40 to-muted/10">
+            {/* Scrollable Content Area with improved padding */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-gradient-to-br from-background/40 to-muted/10">
               <div
                 className={cn(
-                  "mx-auto space-y-6",
+                  "mx-auto space-y-4 md:space-y-6",
                   focusMode ? "max-w-4xl" : "max-w-2xl",
                 )}
               >
-                {/* Title */}
+                {/* Title with improved styling */}
                 <Input
                   placeholder="Enter your poem title..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="text-2xl font-bold border-none bg-transparent px-0 focus-visible:ring-0 placeholder:text-muted-foreground/50"
+                  className="text-xl md:text-2xl font-bold border-none bg-transparent px-0 focus-visible:ring-0 placeholder:text-muted-foreground/50"
                   style={{
                     fontFamily: getCurrentFont(),
                     textAlign: style.alignment as any,
@@ -1351,14 +1393,14 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                   </div>
                 )}
 
-                {/* Content Editor with Advanced Features */}
-                <div className="relative">
-                  {/* Line numbers */}
+                {/* Content Editor with Advanced Features - Improved layout */}
+                <div className="relative mt-4">
+                  {/* Line numbers with better contrast */}
                   {renderLineNumbers()}
 
-                  {/* Template Structure Guide */}
+                  {/* Template Structure Guide - Better positioning */}
                   {selectedTemplate && templateStructure && (
-                    <div className="absolute right-2 top-2 bg-muted/80 backdrop-blur-sm p-2 rounded text-xs text-muted-foreground max-w-xs">
+                    <div className="absolute right-2 top-2 bg-muted/80 backdrop-blur-sm p-2 rounded text-xs text-muted-foreground max-w-xs z-10">
                       <div className="font-medium mb-1">
                         {selectedTemplate.toUpperCase()}
                       </div>
@@ -1379,7 +1421,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                       }
                     }}
                     className={cn(
-                      "min-h-[500px] resize-none border-none bg-transparent text-lg leading-relaxed focus-visible:ring-0 font-mono",
+                      "min-h-[400px] md:min-h-[500px] resize-none border-none bg-transparent text-lg leading-relaxed focus-visible:ring-0 font-mono",
                       showLineNumbers && "pl-12",
                       focusMode && "min-h-[600px] text-xl",
                       collaborationMode && "border-l-4 border-l-blue-500",
@@ -1481,14 +1523,14 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                           {/* Style Selection for Format Mode */}
                           {aiMode === "format" && (
                             <div>
-                              <Label className="text-sm font-medium mb-2 block">
+                              <Label className="text-sm font-medium mb-2 block text-muted-foreground">
                                 Historical Style
                               </Label>
                               <Select
                                 value={aiStyle}
                                 onValueChange={setAiStyle}
                               >
-                                <SelectTrigger className="h-8">
+                                <SelectTrigger className="h-8 text-xs">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1508,7 +1550,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                           {/* Mood Selection for Style Mode */}
                           {aiMode === "style" && (
                             <div>
-                              <Label className="text-sm font-medium mb-2 block">
+                              <Label className="text-sm font-medium mb-2 block text-muted-foreground">
                                 Target Mood
                               </Label>
                               <div className="grid grid-cols-3 gap-2">
@@ -1535,7 +1577,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                           {/* Custom Prompt */}
                           {aiMode === "custom" && (
                             <div>
-                              <Label className="text-sm font-medium mb-2 block">
+                              <Label className="text-sm font-medium mb-2 block text-muted-foreground">
                                 Custom Instruction
                               </Label>
                               <Input
@@ -1553,7 +1595,7 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
                           {aiMode === "themes" &&
                             aiThemeSuggestions.length > 0 && (
                               <div>
-                                <Label className="text-sm font-medium mb-2 block">
+                                <Label className="text-sm font-medium mb-2 block text-muted-foreground">
                                   Suggested Themes
                                 </Label>
                                 <div className="flex flex-wrap gap-2">
@@ -2466,62 +2508,56 @@ export function PoetryEditor({ poemId = null, onClose }: PoetryEditorProps) {
 
                             {rhymeSuggestions.length > 0 && (
                               <div>
-                                <div className="text-xs font-medium mb-1">
-                                  Rhymes:
-                                </div>
-                                <div className="flex flex-wrap gap-1">
-                                  {rhymeSuggestions
-                                    .slice(0, 6)
-                                    .map((word, i) => (
-                                      <Badge
-                                        key={i}
-                                        variant="outline"
-                                        className="text-xs cursor-pointer"
-                                        onClick={() => {
-                                          const newContent = content.replace(
-                                            new RegExp(
-                                              `\\b${selectedWord}\\b`,
-                                              "g",
-                                            ),
-                                            word,
-                                          );
-                                          setContent(newContent);
-                                        }}
-                                      >
-                                        {word}
-                                      </Badge>
-                                    ))}
+                                <Label className="text-xs font-medium mb-2 block">
+                                  Rhyming Words
+                                </Label>
+                                <div className="flex flex-wrap gap-2">
+                                  {rhymeSuggestions.map((word, i) => (
+                                    <Button
+                                      key={i}
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const newContent = content.replace(
+                                          new RegExp(`\\b${selectedWord}\\b`, "g"),
+                                          word,
+                                        );
+                                        setContent(newContent);
+                                        setShowWordAssistant(false);
+                                      }}
+                                      className="h-8 text-xs"
+                                    >
+                                      {word}
+                                    </Button>
+                                  ))}
                                 </div>
                               </div>
                             )}
 
                             {synonymSuggestions.length > 0 && (
                               <div>
-                                <div className="text-xs font-medium mb-1">
-                                  Synonyms:
-                                </div>
-                                <div className="flex flex-wrap gap-1">
-                                  {synonymSuggestions
-                                    .slice(0, 6)
-                                    .map((word, i) => (
-                                      <Badge
-                                        key={i}
-                                        variant="secondary"
-                                        className="text-xs cursor-pointer"
-                                        onClick={() => {
-                                          const newContent = content.replace(
-                                            new RegExp(
-                                              `\\b${selectedWord}\\b`,
-                                              "g",
-                                            ),
-                                            word,
-                                          );
-                                          setContent(newContent);
-                                        }}
-                                      >
-                                        {word}
-                                      </Badge>
-                                    ))}
+                                <Label className="text-xs font-medium mb-2 block">
+                                  Synonyms
+                                </Label>
+                                <div className="flex flex-wrap gap-2">
+                                  {synonymSuggestions.map((word, i) => (
+                                    <Button
+                                      key={i}
+                                      variant="secondary"
+                                      size="sm"
+                                      onClick={() => {
+                                        const newContent = content.replace(
+                                          new RegExp(`\\b${selectedWord}\\b`, "g"),
+                                          word,
+                                        );
+                                        setContent(newContent);
+                                        setShowWordAssistant(false);
+                                      }}
+                                      className="h-8 text-xs"
+                                    >
+                                      {word}
+                                    </Button>
+                                  ))}
                                 </div>
                               </div>
                             )}
